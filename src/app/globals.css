@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Loqui Design Tokens
+ *
+ * Values are stored as HSL triplets ("H S% L%") so Tailwind's `hsl(var(--x))`
+ * consumers can compose alpha without duplicating colors. Light theme is the
+ * default; `.dark` on <html> swaps the palette per design-system.md §1.1.
+ */
+@layer base {
+  :root {
+    /* === Loqui palette (HSL triplets) === */
+    --surface: 36 48% 93%;            /* #F5EEE2 warm cream */
+    --surface-muted: 36 40% 88%;      /* #ECE3D3 card bg */
+    --surface-elevated: 40 60% 96%;   /* #FBF7EE modal/floating */
+
+    --ink: 266 21% 12%;               /* #1C1722 body */
+    --ink-muted: 264 9% 37%;          /* #5B5366 secondary */
+    --ink-subtle: 263 8% 55%;         /* #8A8296 placeholder */
+
+    --primary-raw: 266 26% 14%;       /* #231A2E ink plum */
+    --primary-dark: 265 28% 9%;       /* #14101C pressed */
+    --primary-light: 266 25% 25%;     /* #3D2F50 hover */
+
+    --ember: 19 65% 54%;              /* #D96B3C accent */
+    --ember-deep: 19 67% 41%;         /* #B04F25 pressed */
+    --ember-wash: 22 65% 87%;         /* #F2D9C9 tinted bg */
+
+    --success: 152 46% 34%;           /* #2F7D5C */
+    --error: 9 61% 43%;               /* #B3412C */
+    --warning: 38 74% 44%;            /* #C48A1E */
+
+    /* === shadcn/ui semantic mapping === */
+    --background: var(--surface);
+    --foreground: var(--ink);
+    --card: var(--surface-elevated);
+    --card-foreground: var(--ink);
+    --popover: var(--surface-elevated);
+    --popover-foreground: var(--ink);
+    --primary: var(--primary-raw);
+    --primary-foreground: var(--surface);
+    --secondary: var(--surface-muted);
+    --secondary-foreground: var(--ink);
+    --muted: var(--surface-muted);
+    --muted-foreground: var(--ink-muted);
+    --accent: var(--ember);
+    --accent-foreground: var(--surface);
+    --destructive: var(--error);
+    --destructive-foreground: var(--surface);
+    /* Borders: pure HSL triplet (no alpha) so Tailwind's alpha-modifier
+       syntax `border-border/50` continues to work. Alpha comes from the
+       component, e.g. `border-ink/10`. */
+    --border: 266 20% 15%;
+    --input: 266 20% 15%;
+    --ring: var(--ember);
+
+    /* === Fluid typography === */
+    --font-size-display: clamp(3rem, 2.2rem + 3.5vw, 4rem);
+    --font-size-h1: clamp(2rem, 1.55rem + 2.4vw, 2.75rem);
+    --font-size-h2: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+    --font-size-body-lg: clamp(1.0625rem, 1.03rem + 0.2vw, 1.125rem);
+
+    /* === Motion === */
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.35, 1);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    --duration-instant: 100ms;
+    --duration-fast: 150ms;
+    --duration-base: 250ms;
+    --duration-slow: 400ms;
+    --duration-deliberate: 600ms;
+
+    --radius: 12px;
+  }
+
+  .dark {
+    /* Dark mode per design-system.md §1.1 */
+    --surface: 270 17% 9%;            /* #151019 */
+    --surface-muted: 272 20% 12%;     /* #201724 */
+    --surface-elevated: 270 22% 14%;  /* elevated card on dark */
+
+    --ink: 36 48% 93%;                /* cream becomes body */
+    --ink-muted: 36 20% 70%;
+    --ink-subtle: 36 12% 55%;
+
+    --primary-raw: 36 48% 93%;        /* primary swaps to cream */
+    --primary-dark: 36 40% 86%;
+    --primary-light: 36 55% 97%;
+
+    --ember: 19 72% 62%;              /* #E88556 lifted for AA on plum */
+    --ember-deep: 19 67% 48%;
+    --ember-wash: 19 40% 22%;
+
+    --success: 152 40% 55%;
+    --error: 9 70% 60%;
+    --warning: 38 70% 60%;
+
+    --background: var(--surface);
+    --foreground: var(--ink);
+    --card: var(--surface-elevated);
+    --card-foreground: var(--ink);
+    --popover: var(--surface-elevated);
+    --popover-foreground: var(--ink);
+    --primary: var(--primary-raw);
+    --primary-foreground: 266 26% 14%;  /* plum text on cream button */
+    --secondary: var(--surface-muted);
+    --secondary-foreground: var(--ink);
+    --muted: var(--surface-muted);
+    --muted-foreground: var(--ink-muted);
+    --accent: var(--ember);
+    --accent-foreground: 266 26% 14%;
+    --destructive: var(--error);
+    --destructive-foreground: var(--surface);
+    --border: 36 48% 93%;
+    --input: 36 48% 93%;
+    --ring: var(--ember);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: hsl(var(--surface));
+    color: hsl(var(--ink));
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'cv11';
+    min-height: 100svh;
+    position: relative;
+  }
+
+  /*
+   * Warm grain overlay — 1.5% SVG noise baked into a fixed pseudo-layer so it
+   * survives zoom and stays cheap to render. See design-system.md §8.
+   */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+    opacity: 0.35;
+  }
+
+  .dark body::before {
+    mix-blend-mode: screen;
+    opacity: 0.12;
+  }
+
+  /* Ensure content paints above the grain layer */
+  body > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /*
+   * Custom focus ring, per design-system.md §6.
+   *
+   * We only suppress the default outline; components opt-in to the ember
+   * ring via the Tailwind `focus-visible:shadow-focus` utility. This avoids
+   * doubled rings on shadcn primitives that already style their own focus.
+   */
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: hsl(var(--ember) / 0.4);
+  }
+}
+
+@layer utilities {
+  /* Optional helpers for reduced motion handling */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
