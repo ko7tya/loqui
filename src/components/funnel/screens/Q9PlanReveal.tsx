@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { QuestionShell } from '../QuestionShell';
 import { RhythmLoader } from '../RhythmLoader';
+import { CoachAvatar } from '../CoachAvatar';
 import { Button } from '@/components/ui/button';
 import { useFunnelStore } from '@/lib/state';
 import { generateDeterministicPlan } from '@/lib/plan-generator';
@@ -286,17 +287,22 @@ function PlanReveal({
           aria-label={`Your coach: ${coach.name}`}
         >
           <p className="text-overline font-semibold uppercase text-ember">
-            Your coach
+            Your AI coach
           </p>
-          <div className="mt-1 flex items-baseline justify-between gap-3">
-            <h2 className="font-serif text-h1 text-ink">
-              Meet {coach.name}.
-            </h2>
-            <span className="rounded-full bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-deep">
-              {coach.accent}
-            </span>
+          <div className="mt-2 flex items-center gap-4">
+            <CoachAvatar coach={coach.id} size={64} />
+            <div className="flex flex-1 flex-col gap-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className="font-serif text-h1 text-ink">
+                  Meet {coach.name}.
+                </h2>
+                <span className="rounded-full bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-deep">
+                  {coach.accent}
+                </span>
+              </div>
+            </div>
           </div>
-          <blockquote className="mt-3 border-l-2 border-ember pl-3 font-serif text-body-lg italic text-ink">
+          <blockquote className="mt-4 border-l-2 border-ember pl-3 font-serif text-body-lg italic text-ink">
             &ldquo;{coach.quote}&rdquo;
           </blockquote>
         </motion.aside>

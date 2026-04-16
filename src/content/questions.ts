@@ -263,8 +263,9 @@ export const Q7_SIMPLE_SUBCOPY = 'This is how a Loqui lesson works.';
 export const Q8 = {
   id: 'Q8_COACH' as const,
   section: 'moment' as const,
-  headline: 'Pick your coach.',
-  sub_copy: 'Four people. Four ways to teach you. One is for you.',
+  headline: 'Meet your AI coach.',
+  sub_copy:
+    'Four personalities. They adapt to how you talk, remember what you worked on, and answer any time you open the app.',
   input: 'coach' as const,
 };
 

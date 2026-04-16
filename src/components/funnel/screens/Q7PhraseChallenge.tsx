@@ -93,6 +93,10 @@ export function Q7PhraseChallenge({ direction, onNext, onBack }: Q7Props) {
           const picked = pickedId === opt.id;
           const showCorrect = revealed && opt.isCorrect;
           const showWrong = revealed && picked && !opt.isCorrect;
+          // "Unimportant" = revealed, not picked, not the correct answer.
+          // These become non-interactive + visually faded so the user isn't
+          // tempted to tap them.
+          const dimmed = revealed && !picked && !opt.isCorrect;
           return (
             <motion.button
               key={opt.id}
@@ -100,9 +104,13 @@ export function Q7PhraseChallenge({ direction, onNext, onBack }: Q7Props) {
               role="radio"
               aria-checked={picked}
               aria-disabled={revealed}
+              tabIndex={dimmed ? -1 : 0}
               onClick={() => pick(opt)}
               initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={{
+                opacity: dimmed ? 0.45 : 1,
+                y: 0,
+              }}
               transition={{
                 duration: reduce ? 0.18 : 0.32,
                 ease: [0.25, 1, 0.35, 1],
@@ -112,14 +120,12 @@ export function Q7PhraseChallenge({ direction, onNext, onBack }: Q7Props) {
               className={cn(
                 'group relative rounded-md border px-4 py-4 text-left transition-colors',
                 'focus-visible:outline-none focus-visible:shadow-focus',
-                revealed && !picked && !opt.isCorrect && 'opacity-60',
-                showCorrect &&
-                  'border-2 border-success bg-success/5 text-ink',
+                showCorrect && 'border-2 border-success bg-success/5 text-ink',
                 showWrong && 'border-2 border-error bg-error/5 text-ink',
                 !revealed &&
-                  'border-ink/10 bg-surface-muted hover:bg-surface-elevated hover:shadow-sm',
-                revealed && !showCorrect && !showWrong &&
-                  'border-ink/10 bg-surface-muted',
+                  'border-ink/10 bg-surface-muted hover:bg-surface-elevated hover:shadow-sm cursor-pointer',
+                dimmed &&
+                  'border-ink/10 bg-surface-muted/60 pointer-events-none cursor-default line-through decoration-ink-muted/40 decoration-1',
               )}
             >
               <div className="flex items-start gap-3">
@@ -131,20 +137,28 @@ export function Q7PhraseChallenge({ direction, onNext, onBack }: Q7Props) {
                     showWrong && 'border-error bg-error text-surface-elevated',
                     !showCorrect && !showWrong && picked && 'border-ember',
                     !picked && !revealed && 'border-ink/30',
+                    dimmed && 'border-ink/15',
                   )}
                   aria-hidden
                 >
                   {showCorrect && <Check className="h-3 w-3" strokeWidth={3} />}
                   {showWrong && <X className="h-3 w-3" strokeWidth={3} />}
                 </span>
-                <span className="flex-1 text-body-lg text-ink">&quot;{opt.text}&quot;</span>
+                <span
+                  className={cn(
+                    'flex-1 text-body-lg text-ink',
+                    dimmed && 'text-ink-muted',
+                  )}
+                >
+                  &quot;{opt.text}&quot;
+                </span>
               </div>
               {revealed && opt.why && (picked || opt.isCorrect) && (
                 <motion.p
                   initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="mt-2 pl-8 text-body-sm text-ink-muted"
+                  className="mt-2 pl-8 text-body-sm text-ink-muted no-underline"
                 >
                   {opt.why}
                 </motion.p>
