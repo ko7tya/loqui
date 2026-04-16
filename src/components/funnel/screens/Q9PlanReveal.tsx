@@ -30,17 +30,19 @@ type Stage = 'loading' | 'ready' | 'failed';
 /**
  * Loading choreography. Each stage describes a separate beat of the
  * anticipation animation:
- *   1 — reading (0–0.9s): the answers get processed. Avatar unblurs.
- *   2 — calibrating (0.9–2.0s): the readiness-score axes pulse on.
- *   3 — drafting (2.0–3.2s): plan skeleton lines stroke in.
- *   4 — finalizing (3.2–3.8s): copy fades out, reveal takes over.
- * Total floor: 3800ms so even fast API responses earn the payoff.
+ *   1 — reading (0–1.15s):  the answers get processed. Avatar unblurs.
+ *   2 — calibrating (1.15–2.55s): the readiness-score axes pulse on.
+ *   3 — drafting (2.55–4.05s): plan skeleton lines stroke in.
+ *   4 — finalizing (4.05–4.8s): copy fades out, reveal takes over.
+ * Total floor: 4800ms — ~25% slower than the previous 3.8s beat, so the
+ * initial blur→focus doesn't read as a "blink" before the user has
+ * finished reading the beat-1 copy.
  */
 const LOADING_COPY = [
-  { label: 'Reading your answers', duration: 900 },
-  { label: 'Calibrating your readiness score', duration: 1100 },
-  { label: 'Drafting your four weeks', duration: 1200 },
-  { label: 'Finalizing', duration: 600 },
+  { label: 'Reading your answers', duration: 1150 },
+  { label: 'Calibrating your readiness score', duration: 1400 },
+  { label: 'Drafting your four weeks', duration: 1500 },
+  { label: 'Finalizing', duration: 750 },
 ] as const;
 
 const MIN_LOADING_MS = LOADING_COPY.reduce((acc, s) => acc + s.duration, 0);
@@ -475,17 +477,18 @@ function LoadingChoreography({
 
   return (
     <div className="flex flex-1 flex-col items-center justify-start gap-7 py-6">
-      {/* Beat 1: avatar materializes */}
+      {/* Beat 1: avatar materializes. Slower than the default 0.7s so the
+          blur→focus reads as a deliberate "warming up" rather than a flash. */}
       {coach && (
         <motion.div
-          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.85, filter: 'blur(12px)' }}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
           animate={{
             opacity: 1,
             scale: 1,
             filter: 'blur(0px)',
           }}
           transition={{
-            duration: reduce ? 0.3 : 0.7,
+            duration: reduce ? 0.3 : 0.9,
             ease: [0.16, 1, 0.3, 1],
           }}
           className="relative"
@@ -534,7 +537,7 @@ function LoadingChoreography({
             key={axis}
             label={AXIS_LABELS[axis]}
             active={copyIndex >= 1}
-            delay={copyIndex >= 1 ? i * 0.18 : 0}
+            delay={copyIndex >= 1 ? i * 0.22 : 0}
             reduce={reduce ?? false}
           />
         ))}
@@ -553,7 +556,7 @@ function LoadingChoreography({
             key={i}
             week={i + 1}
             active={copyIndex >= 2}
-            delay={copyIndex >= 2 ? i * 0.12 : 0}
+            delay={copyIndex >= 2 ? i * 0.15 : 0}
             reduce={reduce ?? false}
           />
         ))}
@@ -596,7 +599,7 @@ function AxisBar({
           transition={
             reduce
               ? { duration: 0.3, delay }
-              : { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay }
+              : { duration: 1.1, ease: [0.16, 1, 0.3, 1], delay }
           }
         />
       </div>
@@ -626,7 +629,7 @@ function WeekSkeleton({
       transition={
         reduce
           ? { duration: 0.3, delay }
-          : { duration: 0.5, ease: [0.16, 1, 0.3, 1], delay }
+          : { duration: 0.65, ease: [0.16, 1, 0.3, 1], delay }
       }
       className="flex items-center gap-3 rounded-md border border-ink/10 bg-surface-muted/60 px-3 py-2.5"
     >
