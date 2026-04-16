@@ -6,6 +6,7 @@ import { QuestionShell } from '../QuestionShell';
 import { Button } from '@/components/ui/button';
 import { useFunnelStore } from '@/lib/state';
 import { track } from '@/lib/analytics';
+import { WORLD_MAP_PATHS, WORLD_MAP_VIEWBOX } from '@/content/world-map';
 import type { Segment } from '@/lib/types';
 
 export interface SocialProofMapProps {
@@ -34,37 +35,16 @@ const NOUNS: Record<Segment, string> = {
   travel_social: 'travelers',
 };
 
-// 6 pin cities across the globe, roughly positioned on a 1000×500 grid.
-// Coordinates are rough silhouette-map positions.
+// 6 pin cities across the globe, positioned on the real Wikipedia world map
+// (viewBox 950×620, Robinson-ish projection). Coordinates eyeballed against
+// the actual continents so each pin lands where you'd expect it.
 const PINS = [
-  { name: 'Berlin', x: 530, y: 170 },
-  { name: 'São Paulo', x: 330, y: 350 },
-  { name: 'Jakarta', x: 800, y: 310 },
-  { name: 'Mumbai', x: 700, y: 240 },
-  { name: 'Mexico City', x: 205, y: 255 },
-  { name: 'Istanbul', x: 580, y: 195 },
-];
-
-// Continent silhouettes as polygon point strings — rough but recognizable at
-// 1000×500. Each polygon gets filled with a dot pattern (see <defs>) so the
-// whole map reads as an "earth skeleton" made of dots.
-const CONTINENTS = [
-  // North America (including Greenland + Central America)
-  '90,95 160,80 240,85 290,110 310,175 290,220 255,255 225,260 205,285 185,300 150,285 130,240 105,210 85,170 78,130',
-  // South America
-  '270,280 320,285 345,340 340,395 310,430 280,435 260,400 255,350 260,310',
-  // Europe
-  '450,130 510,120 560,130 580,155 590,195 555,215 505,220 470,210 450,175',
-  // Africa
-  '495,220 560,215 605,250 600,320 580,370 540,400 510,400 485,370 475,320 480,260',
-  // Middle East + South Asia
-  '580,185 640,180 700,205 720,250 700,285 660,280 625,255 595,225',
-  // Asia (large landmass)
-  '590,105 680,95 780,105 860,130 870,180 835,220 770,240 720,225 670,215 625,195 600,160',
-  // South-East Asia / Indonesia
-  '755,270 810,275 840,295 810,315 770,310 755,290',
-  // Australia
-  '770,340 830,335 870,345 880,380 860,400 810,405 775,395',
+  { name: 'Berlin', x: 510, y: 195 },
+  { name: 'São Paulo', x: 340, y: 425 },
+  { name: 'Jakarta', x: 765, y: 395 },
+  { name: 'Mumbai', x: 675, y: 300 },
+  { name: 'Mexico City', x: 210, y: 300 },
+  { name: 'Istanbul', x: 545, y: 220 },
 ];
 
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -108,24 +88,25 @@ export function SocialProofMap({
     >
       <div className="rounded-lg border border-ink/10 bg-surface-elevated px-4 py-6 shadow-sm">
         <svg
-          viewBox="0 0 1000 500"
+          viewBox={WORLD_MAP_VIEWBOX}
           className="h-auto w-full text-ink"
           role="img"
-          aria-label="Earth skeleton made of dots, with learner activity pins"
+          aria-label="World map with learner activity pins"
         >
           <defs>
-            {/* Dot pattern — every continent polygon is filled with it, so the
-                world map reads as a skeleton of dots. 9×9 cell, single centered
-                dot, reuses the ink color at low opacity. */}
+            {/* Dot pattern — every country path is filled with it, so the full
+                world map reads as a dotted silhouette. 6×6 cell with a single
+                centered dot at low opacity; identical across every country so
+                borders vanish and the whole thing reads as continent shapes. */}
             <pattern
               id="spm-dot-grid"
               x="0"
               y="0"
-              width="9"
-              height="9"
+              width="6"
+              height="6"
               patternUnits="userSpaceOnUse"
             >
-              <circle cx="4.5" cy="4.5" r="1.1" fill="currentColor" opacity="0.38" />
+              <circle cx="3" cy="3" r="0.9" fill="currentColor" opacity="0.42" />
             </pattern>
 
             <radialGradient id="spm-glow" cx="50%" cy="50%" r="50%">
@@ -134,16 +115,13 @@ export function SocialProofMap({
             </radialGradient>
           </defs>
 
-          {/* Continents */}
-          <g>
-            {CONTINENTS.map((points, i) => (
-              <polygon
-                key={i}
-                points={points}
-                fill="url(#spm-dot-grid)"
-              />
-            ))}
-          </g>
+          {/* Continents — real Wikimedia Commons low-res world map, 340 country
+              paths, all filled with the shared dot pattern so borders dissolve. */}
+          <g
+            fill="url(#spm-dot-grid)"
+            stroke="none"
+            dangerouslySetInnerHTML={{ __html: WORLD_MAP_PATHS }}
+          />
 
           {/* Pins with radar-ping ripple + core blink */}
           {PINS.map((pin, i) => (
