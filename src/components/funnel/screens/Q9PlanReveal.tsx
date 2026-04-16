@@ -159,13 +159,21 @@ export function Q9PlanReveal({ direction, onNext, onBack }: Q9Props) {
   // nothing (which the reveal renders as a neutral single-line intro).
   const coachBlock = resolveCoachBlock(answers, plan, segment);
 
+  // Use the simplest-possible render for the loading stage so the user never
+  // sees a blank screen: no opacity transition, no nested AnimatePresence on
+  // the outer container. Copy rotation still animates, but the loader itself
+  // is present from the very first paint.
   return (
     <QuestionShell
       step={9}
       direction={direction}
-      section="YOUR CADENCE"
-      title="Your plan."
-      subtitle={segmentDef.q9_sub_copy}
+      section={stage === 'loading' ? 'BUILDING' : 'YOUR CADENCE'}
+      title={stage === 'loading' ? 'Your plan is on the way.' : 'Your plan.'}
+      subtitle={
+        stage === 'loading'
+          ? 'A few seconds — we only build this once.'
+          : segmentDef.q9_sub_copy
+      }
       onBack={onBack}
       cta={
         plan && stage === 'ready' ? (
@@ -174,45 +182,30 @@ export function Q9PlanReveal({ direction, onNext, onBack }: Q9Props) {
           </Button>
         ) : undefined
       }
-      hideTitle={stage === 'loading'}
     >
-      <AnimatePresence mode="wait">
-        {stage === 'loading' && (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-1 flex-col items-center justify-center gap-8 py-16"
-          >
-            <RhythmLoader size="lg" label="Generating your plan" />
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={copyIndex}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.3 }}
-                className="font-serif text-h2 text-ink text-center text-balance"
-              >
-                {LOADING_COPY[copyIndex]}
-              </motion.p>
-            </AnimatePresence>
-          </motion.div>
-        )}
+      {stage === 'loading' && (
+        <div className="flex flex-1 flex-col items-center justify-center gap-8 py-12">
+          <RhythmLoader size="lg" label="Generating your plan" />
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={copyIndex}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.3 }}
+              className="font-serif text-h2 text-ink text-center text-balance"
+            >
+              {LOADING_COPY[copyIndex]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+      )}
 
-        {stage === 'ready' && plan && (
-          <motion.div
-            key="plan"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col gap-5"
-          >
-            <PlanReveal plan={plan} coach={coachBlock} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {stage === 'ready' && plan && (
+        <div className="flex flex-col gap-5">
+          <PlanReveal plan={plan} coach={coachBlock} />
+        </div>
+      )}
     </QuestionShell>
   );
 }

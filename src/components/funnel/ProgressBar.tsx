@@ -63,23 +63,29 @@ export function ProgressBar({ currentStep, className }: ProgressBarProps) {
           const fill = sectionFill(clamped, section.start, section.end);
           const complete = fill >= 1;
           return (
+            // Outer wrapper has NO overflow-hidden so the checkmark badge can sit
+            // cleanly on top of the bar without being clipped into half-circles.
             <div
               key={section.label}
-              className="relative h-2 flex-1 overflow-hidden rounded-full bg-ink/10"
+              className="relative h-2 flex-1"
             >
-              <motion.div
-                className="h-full rounded-full bg-ember"
-                initial={false}
-                animate={{ width: `${fill * 100}%` }}
-                transition={
-                  reduce
-                    ? { duration: 0 }
-                    : { type: 'spring', stiffness: 260, damping: 30 }
-                }
-              />
+              {/* Track — clips the fill, not the checkmark. */}
+              <div className="absolute inset-0 overflow-hidden rounded-full bg-ink/10">
+                <motion.div
+                  className="h-full rounded-full bg-ember"
+                  initial={false}
+                  animate={{ width: `${fill * 100}%` }}
+                  transition={
+                    reduce
+                      ? { duration: 0 }
+                      : { type: 'spring', stiffness: 260, damping: 30 }
+                  }
+                />
+              </div>
+              {/* Checkmark floats above the track; never clipped. */}
               {complete && (
                 <motion.span
-                  className="absolute right-1 top-1/2 flex h-3 w-3 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-ember shadow-sm"
+                  className="absolute right-0 top-1/2 flex h-3.5 w-3.5 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-ember shadow-[0_0_0_1px_hsl(var(--ember))_inset]"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{
