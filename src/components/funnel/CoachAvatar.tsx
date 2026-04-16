@@ -46,14 +46,12 @@ export function CoachAvatar({
         dangerouslySetInnerHTML={{ __html: svg }}
       />
 
-      {/* AI live indicator — tiny ember dot, pulses. Hidden when reduced
-          motion is preferred (the static dot still reads correctly). */}
+      {/* AI live indicator — static ember dot only (no pulse). */}
       {live && (
         <span
           className="pointer-events-none absolute right-0 top-0 flex h-3 w-3 items-center justify-center"
-          aria-label="AI coach, live"
+          aria-label="AI coach"
         >
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember opacity-55 motion-reduce:hidden" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ember ring-2 ring-surface" />
         </span>
       )}

@@ -491,22 +491,6 @@ function LoadingChoreography({
           className="relative"
         >
           <CoachAvatar coach={coach.id} size={88} />
-          {!reduce && (
-            <motion.span
-              aria-hidden
-              className="absolute inset-[-10px] rounded-full ring-2 ring-ember/30"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: [0, 0.6, 0],
-                scale: [0.8, 1.15, 1.4],
-              }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: 'easeOut',
-              }}
-            />
-          )}
         </motion.div>
       )}
 

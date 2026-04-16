@@ -40,11 +40,12 @@ export interface QuestionShellProps {
 
 const EASE_OUT_EXPO: number[] = [0.16, 1, 0.3, 1];
 
-// Slide variants: translate + fade only. Dropped the `scale` component —
-// layering scale on both enter and exit created a visible wobble on the
-// final exit frame. Range kept short (18px) so the slide reads as a cut,
-// not a drawer. Entry is slightly slower than exit so the incoming screen
-// dominates attention.
+// Slide variants: translate + fade only. Dropped `scale` — layering scale on
+// both enter and exit created a visible wobble on the final exit frame.
+// Range kept short (18px) so the slide reads as a cut, not a drawer.
+// Timing tuned 30% slower than the original snap so the transition reads as
+// deliberate rather than flicky; entry still lags exit so the incoming
+// screen dominates attention.
 const slideVariants: Variants = {
   enter: (dir: number) => ({
     x: dir * 18,
@@ -53,12 +54,12 @@ const slideVariants: Variants = {
   center: {
     x: 0,
     opacity: 1,
-    transition: { duration: 0.28, ease: EASE_OUT_EXPO },
+    transition: { duration: 0.36, ease: EASE_OUT_EXPO },
   },
   exit: (dir: number) => ({
     x: dir * -18,
     opacity: 0,
-    transition: { duration: 0.16, ease: EASE_OUT_EXPO },
+    transition: { duration: 0.21, ease: EASE_OUT_EXPO },
   }),
 };
 
