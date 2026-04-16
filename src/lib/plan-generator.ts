@@ -1,13 +1,16 @@
 import type {
   FunnelState,
   GeneratedPlan,
+  PlanCoachBlock,
   PlanWeek,
   Segment,
   TimeCommitment,
   WhoTalkingTo,
+  CoachId,
 } from './types';
 import { LEVEL_LABELS } from './types';
 import { PLAN_TEMPLATES } from '@/content/plans';
+import { COACHES, coachByStyle } from '@/content/coaches';
 
 /**
  * Deterministic plan generator — pure, sync, <50ms.
@@ -17,6 +20,11 @@ import { PLAN_TEMPLATES } from '@/content/plans';
  *
  * Slot substitution is intentionally simple: exact-match `{{key}}` only, no
  * loops, no conditionals. Copywriters can reason about a template visually.
+ *
+ * v2: the returned plan carries an optional `coach` block resolved from
+ * `q8_coach` (preferred) or `q8_style` (fallback for stale sessions). The
+ * Q9 reveal and Success screen both read this block directly, so clients
+ * never need to re-derive the coach from answers.
  */
 
 const WHO_LABELS: Record<WhoTalkingTo, string> = {
@@ -75,6 +83,27 @@ const fillSlots = (
 };
 
 /**
+ * Derive the `PlanCoachBlock` that rides along with a generated plan. Reads
+ * `q8_coach` first; falls back to `q8_style` → matching coach id; returns
+ * undefined when neither is present (the reveal then shows a neutral intro).
+ */
+export function resolveCoachBlock(
+  answers: FunnelState,
+): PlanCoachBlock | undefined {
+  const coachId: CoachId | undefined =
+    answers.q8_coach ?? coachByStyle(answers.q8_style);
+  if (!coachId) return undefined;
+  const c = COACHES[coachId];
+  const segment: Segment = answers.q3_segment ?? DEFAULT_SEGMENT;
+  return {
+    id: c.id,
+    name: c.name,
+    accent: c.accent,
+    quote: c.quotes[segment],
+  };
+}
+
+/**
  * Public entry point — used by the API route when Claude is disabled or fails.
  * Must complete synchronously and well under 50ms.
  */
@@ -86,5 +115,8 @@ export function generateDeterministicPlan(
   const template =
     PLAN_TEMPLATES[segment]?.[time] ??
     PLAN_TEMPLATES[DEFAULT_SEGMENT][DEFAULT_TIME];
-  return fillSlots(template, answers);
+  const plan = fillSlots(template, answers);
+  const coach = resolveCoachBlock(answers);
+  if (coach) plan.coach = coach;
+  return plan;
 }

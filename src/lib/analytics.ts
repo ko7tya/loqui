@@ -12,6 +12,8 @@ export type AnalyticsEvent =
   | 'question_viewed'
   | 'question_answered'
   | 'segment_detected'
+  | 'age_selected'
+  | 'coach_selected'
   | 'interstitial_viewed'
   | 'plan_generation_started'
   | 'plan_generated'

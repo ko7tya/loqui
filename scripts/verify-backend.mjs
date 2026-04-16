@@ -67,10 +67,14 @@ if (!planPost || !submitPost) {
       q5_moment: "A negotiation where I don't lose the argument",
       q2_level: 'conversational',
       q1_who_talking_to: 'colleague',
+      // v2: age + coach ride along; response should carry coach block.
+      q4_age: '35_44',
+      q8_coach: 'marcus',
+      q8_style: 'drills',
     }),
   );
   const body = await res.json();
-  show('POST /api/plan — career/20', {
+  show('POST /api/plan — career/20 (v2)', {
     status: res.status,
     source: body.source,
     plan_name: body.plan.plan_name,
@@ -80,6 +84,7 @@ if (!planPost || !submitPost) {
     first_week1_session: body.plan.weeks[0].sessions[0],
     the_moment: body.plan.the_moment,
     outcome: body.plan.outcome,
+    coach: body.plan.coach,
   });
 }
 
@@ -147,7 +152,8 @@ if (!planPost || !submitPost) {
         q1_who_talking_to: 'colleague',
         q2_level: 'conversational',
         q3_segment: 'career',
-        q4_prior_apps: ['duolingo', 'babbel'],
+        // v2: age + coach.
+        q4_age: '35_44',
         q5_moment: "A negotiation where I don't lose the argument",
         q5_moment_id: 'negotiation',
         q6_time: 20,
@@ -156,13 +162,14 @@ if (!planPost || !submitPost) {
           selected_option_id: 'opt_2',
           was_correct: true,
         },
+        q8_coach: 'elena',
         q8_style: 'conversations',
       },
       _hp: '',
     }),
   );
   const body = await res.json();
-  show('POST /api/submit — first', { status: res.status, body });
+  show('POST /api/submit — first (v2)', { status: res.status, body });
 }
 
 {

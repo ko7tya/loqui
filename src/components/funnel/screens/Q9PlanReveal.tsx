@@ -8,8 +8,15 @@ import { Button } from '@/components/ui/button';
 import { useFunnelStore } from '@/lib/state';
 import { generateDeterministicPlan } from '@/lib/plan-generator';
 import { SEGMENT_DEFS } from '@/content/segments';
+import { COACHES, coachByStyle } from '@/content/coaches';
 import { track } from '@/lib/analytics';
-import type { FunnelState, GeneratedPlan, ReadinessAxis } from '@/lib/types';
+import type {
+  FunnelState,
+  GeneratedPlan,
+  PlanCoachBlock,
+  ReadinessAxis,
+  Segment,
+} from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 export interface Q9Props {
@@ -43,6 +50,11 @@ const AXIS_LABELS: Record<ReadinessAxis, string> = {
  *      show the plan. Perceived effort anchors value (design-system.md §5.5).
  *   3. If the first request fails, retry once. If still failing, fall back
  *      to `generateDeterministicPlan` client-side and flag `plan_fallback_used`.
+ *
+ * v2: the reveal opens with a coach introduction block — name, accent chip,
+ * segment-specific italic quote — animated in first, then focus axes, then
+ * weeks, then outcome. If neither `q8_coach` nor `q8_style` resolves a coach
+ * we skip the block and fall back to a neutral one-line intro.
  */
 export function Q9PlanReveal({ direction, onNext, onBack }: Q9Props) {
   const answers = useFunnelStore((s) => s.answers);
@@ -103,7 +115,6 @@ export function Q9PlanReveal({ direction, onNext, onBack }: Q9Props) {
     };
 
     (async () => {
-      // TODO: remove when /api/plan is confirmed
       const first = await fetchPlan();
       const result = first ?? (await fetchPlan());
       await minDelay;
@@ -141,6 +152,12 @@ export function Q9PlanReveal({ direction, onNext, onBack }: Q9Props) {
   const plan = answers.generated_plan;
   const segment = answers.segment ?? 'career';
   const segmentDef = SEGMENT_DEFS[segment];
+
+  // Resolve the coach block. Prefer the server-attached `plan.coach` (the
+  // /api/plan route now enriches the plan with coach context). Fall back to
+  // the store's `q8_coach`, then to `q8_style` → matching coach id, then
+  // nothing (which the reveal renders as a neutral single-line intro).
+  const coachBlock = resolveCoachBlock(answers, plan, segment);
 
   return (
     <QuestionShell
@@ -192,7 +209,7 @@ export function Q9PlanReveal({ direction, onNext, onBack }: Q9Props) {
             exit={{ opacity: 0 }}
             className="flex flex-col gap-5"
           >
-            <PlanReveal plan={plan} />
+            <PlanReveal plan={plan} coach={coachBlock} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -201,10 +218,54 @@ export function Q9PlanReveal({ direction, onNext, onBack }: Q9Props) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Coach block resolution
+// ─────────────────────────────────────────────────────────────────────────────
+
+function resolveCoachBlock(
+  answers: FunnelState,
+  plan: GeneratedPlan | undefined,
+  segment: Segment,
+): PlanCoachBlock | undefined {
+  // Preferred source: the API response already attached a coach.
+  if (plan?.coach) return plan.coach;
+
+  // Next: the store has a Q8 coach pick.
+  if (answers.q8_coach) {
+    const c = COACHES[answers.q8_coach];
+    return {
+      id: c.id,
+      name: c.name,
+      accent: c.accent,
+      quote: c.quotes[segment],
+    };
+  }
+
+  // Final: infer the coach from the legacy `q8_style` key (old saved sessions).
+  const inferred = coachByStyle(answers.q8_style);
+  if (inferred) {
+    const c = COACHES[inferred];
+    return {
+      id: c.id,
+      name: c.name,
+      accent: c.accent,
+      quote: c.quotes[segment],
+    };
+  }
+
+  return undefined;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Plan reveal body — staggered cascade from the spec §3.7
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PlanReveal({ plan }: { plan: GeneratedPlan }) {
+function PlanReveal({
+  plan,
+  coach,
+}: {
+  plan: GeneratedPlan;
+  coach: PlanCoachBlock | undefined;
+}) {
   const reduce = useReducedMotion();
   const base = reduce
     ? { initial: { opacity: 0 }, animate: { opacity: 1 } }
@@ -224,8 +285,39 @@ function PlanReveal({ plan }: { plan: GeneratedPlan }) {
 
   return (
     <>
+      {/* Coach introduction — first in the stagger. */}
+      {coach ? (
+        <motion.aside
+          {...step(0)}
+          className="rounded-lg border border-ember/40 bg-ember-wash/70 px-5 py-5 shadow-sm"
+          aria-label={`Your coach: ${coach.name}`}
+        >
+          <p className="text-overline font-semibold uppercase text-ember">
+            Your coach
+          </p>
+          <div className="mt-1 flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-h1 text-ink">
+              Meet {coach.name}.
+            </h2>
+            <span className="rounded-full bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-deep">
+              {coach.accent}
+            </span>
+          </div>
+          <blockquote className="mt-3 border-l-2 border-ember pl-3 font-serif text-body-lg italic text-ink">
+            &ldquo;{coach.quote}&rdquo;
+          </blockquote>
+        </motion.aside>
+      ) : (
+        <motion.p
+          {...step(0)}
+          className="font-serif text-h2 text-ink text-balance"
+        >
+          Here&apos;s your plan.
+        </motion.p>
+      )}
+
       {/* Plan name + tagline */}
-      <motion.header {...step(0)} className="flex flex-col gap-2">
+      <motion.header {...step(1)} className="flex flex-col gap-2">
         <h2 className="font-serif text-display text-ink text-balance">
           {plan.plan_name}
         </h2>
@@ -234,7 +326,7 @@ function PlanReveal({ plan }: { plan: GeneratedPlan }) {
 
       {/* Moment quote */}
       <motion.div
-        {...step(1)}
+        {...step(2)}
         className="rounded-lg border-l-[3px] border-ember bg-surface-elevated px-4 py-3 shadow-sm"
       >
         <p className="text-overline font-semibold uppercase text-ember">
@@ -246,7 +338,7 @@ function PlanReveal({ plan }: { plan: GeneratedPlan }) {
       </motion.div>
 
       {/* Focus axes */}
-      <motion.section {...step(2)} className="flex flex-col gap-3">
+      <motion.section {...step(3)} className="flex flex-col gap-3">
         <h3 className="text-overline font-semibold uppercase text-ink-muted">
           Focus
         </h3>
@@ -268,7 +360,7 @@ function PlanReveal({ plan }: { plan: GeneratedPlan }) {
       </motion.section>
 
       {/* Weekly cards */}
-      <motion.section {...step(3)} className="flex flex-col gap-3">
+      <motion.section {...step(4)} className="flex flex-col gap-3">
         <h3 className="text-overline font-semibold uppercase text-ink-muted">
           Four weeks
         </h3>
@@ -281,7 +373,7 @@ function PlanReveal({ plan }: { plan: GeneratedPlan }) {
               transition={{
                 duration: 0.4,
                 ease: [0.16, 1, 0.3, 1],
-                delay: reduce ? 0 : 0.5 + 0.1 * i,
+                delay: reduce ? 0 : 0.6 + 0.1 * i,
               }}
               className={cn(
                 'rounded-lg border border-ink/10 bg-surface-elevated px-4 py-4 shadow-sm',
@@ -323,7 +415,7 @@ function PlanReveal({ plan }: { plan: GeneratedPlan }) {
 
       {/* Outcome */}
       <motion.p
-        {...step(4)}
+        {...step(5)}
         className="mt-2 font-serif text-body-lg italic text-ink-muted text-balance"
       >
         {plan.outcome}

@@ -49,6 +49,16 @@ const FunnelStateSchema = z
         z.enum(['duolingo', 'babbel', 'busuu', 'italki_preply', 'none']),
       )
       .optional(),
+    q4_age: z
+      .enum([
+        'under_18',
+        '18_24',
+        '25_34',
+        '35_44',
+        '45_54',
+        '55_plus',
+      ])
+      .optional(),
     q5_moment: z.string().max(300).optional(),
     q5_moment_id: z.string().max(64).optional(),
     q6_time: z.union([z.literal(10), z.literal(20), z.literal(45)]).optional(),
@@ -62,6 +72,7 @@ const FunnelStateSchema = z
     q8_style: z
       .enum(['drills', 'conversations', 'stories', 'structured'])
       .optional(),
+    q8_coach: z.enum(['marcus', 'elena', 'aiko', 'david']).optional(),
   })
   .passthrough();
 

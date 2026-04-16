@@ -59,6 +59,15 @@ const WhoSchema = z.enum([
   'partner_family',
   'interviewer',
 ]);
+const AgeBracketSchema = z.enum([
+  'under_18',
+  '18_24',
+  '25_34',
+  '35_44',
+  '45_54',
+  '55_plus',
+]);
+const CoachSchema = z.enum(['marcus', 'elena', 'aiko', 'david']);
 
 const PlanRequestSchema = z
   .object({
@@ -66,12 +75,14 @@ const PlanRequestSchema = z
     q2_level: LevelSchema.optional(),
     q3_segment: SegmentSchema.optional(),
     q4_prior_apps: z.array(PriorAppSchema).optional(),
+    q4_age: AgeBracketSchema.optional(),
     q5_moment: z.string().max(300).optional(),
     q5_moment_id: z.string().max(64).optional(),
     q6_time: TimeSchema.optional(),
     q7_seed_phrase: z.string().max(500).optional(),
     q7_user_phrase: z.string().max(500).optional(),
     q8_style: StyleSchema.optional(),
+    q8_coach: CoachSchema.optional(),
   })
   .passthrough();
 

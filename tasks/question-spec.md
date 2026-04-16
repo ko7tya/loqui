@@ -557,3 +557,110 @@ Drop-off per question = `question_viewed` minus `question_answered` grouped by `
 8. **Q7 fallback fidelity.** Stubs won't reference the user's actual phrase. Acceptable degradation, or harder retry-with-backoff before falling back?
 9. **Telegram notify payload.** Recommend minimal (email, segment, plan_name, waitlist_position). Confirm scope.
 10. **Q7 free-text analytics.** PII-adjacent. Recommend: hash + bucket by length/language in Amplitude; raw text in Vercel KV, session-scoped only.
+
+---
+
+## v2 — Coach + Age + UTM + Accessibility
+
+**Version:** 2.0 | **Owner:** Product Strategy | **Status:** Shipped (pending stakeholder review)
+
+The v1 spec above remains the source of truth for Q1-Q3, Q5-Q7, Q9-Q10. This section documents the four v2 decisions and the accessibility layer.
+
+### Decision A1 — Swap Q4 and Q8
+
+**Q4 (was: prior app usage) is now age bracket.** Six options: Under 18, 18–24, 25–34, 35–44, 45–54, 55+. Single-choice, 2-column grid on `sm+`. Writes `q4_age: AgeBracket` to state.
+
+**Q8 (was: learning style) is now coach selection.** Four coaches — Marcus (American, drills), Elena (British, conversations), Aiko (Australian, stories), David (Canadian, structured). 2×2 grid on `sm+`, stacked on xs. The picker writes both `q8_coach: CoachId` (new) and `q8_style: LearningStyle` (legacy, still keyed by the plan-template matrix) in lockstep. The old prior-app field is retained on `FunnelState` for back-compat with stale saved sessions but never written by live code.
+
+Funnel stays at 10 questions.
+
+### Decision B1 — Language accessibility
+
+- Dual copy: every top-of-funnel question has a `_SIMPLE_*` variant (shorter sentences, common verbs only). Swapping is helper-driven via `pickCopy(level, standard, simple)` — the variant renders when Q2 level is `getting_by`.
+- Native-language help tooltip: a "?" icon next to the theme toggle opens a short popover in the user's language. Supported: Spanish, Portuguese, French, Russian, Chinese (simplified), Korean, Arabic (RTL), Japanese. Fallback: English.
+- Locale detection order: UTM `lang_hint` → stored `ui_locale_hint` → `navigator.language` → English.
+
+### Decision C1 — UTM preseeds
+
+On landing, `readUtmFromLocation()` parses `window.location.search` and returns a clean `UtmContext`. Validated hints:
+
+- `age` → `AgeBracket` (must match canonical value)
+- `segment` → `Segment` (must match canonical value)
+- `lang` → ISO 639-1 two-letter lowercase
+- `utm_source`, `utm_campaign`, `utm_medium`, `utm_content`, `persona` → free-form (64-char cap)
+
+`hydrateFromUtm()` preseeds `q3_segment` / `q4_age` / `ui_locale_hint` when the corresponding hint is present AND the user hasn't already answered. The user still sees every question — the answer is just pre-filled. UTM context is tracked on `funnel_started`.
+
+### Decision D1 — Coach intro on plan reveal
+
+Q9 now opens with a coach-introduction block: "Meet {name}." + accent chip + segment-specific italic quote from `COACHES[coachId].quotes[segment]`. The quote stagger-animates in first, then the plan name, focus axes, weeks, outcome. When `q8_coach` is missing we fall back to the coach whose `style` matches `q8_style`; if neither resolves we skip the block and show a neutral single-line intro.
+
+The SuccessScreen adds a single line below the segment body: "**{coach.name}** is ready. Check your inbox."
+
+### State additions
+
+```ts
+export type AgeBracket =
+  | 'under_18' | '18_24' | '25_34' | '35_44' | '45_54' | '55_plus';
+
+export type CoachId = 'marcus' | 'elena' | 'aiko' | 'david';
+
+export interface Coach {
+  id: CoachId;
+  name: string;
+  accent: string;        // "American", "British", "Australian", "Canadian"
+  tagline: string;       // 4-6 word pitch on the selection card
+  vibe: string;          // One-liner personality fingerprint
+  style: LearningStyle;  // Maps to the plan-template matrix
+  quotes: Record<Segment, string>;
+}
+
+export interface UtmContext {
+  utm_source?: string;
+  utm_campaign?: string;
+  utm_medium?: string;
+  utm_content?: string;
+  age_hint?: AgeBracket;
+  segment_hint?: Segment;
+  lang_hint?: string;    // ISO 639-1
+  persona?: string;
+}
+
+// FunnelState additions:
+//   q4_age?: AgeBracket
+//   q8_coach?: CoachId
+//   utm?: UtmContext
+//   ui_locale_hint?: string
+// q4_prior_apps still typed on state for back-compat (not written by v2).
+```
+
+### Plan schema addition
+
+```ts
+export interface PlanCoachBlock {
+  id: CoachId;
+  name: string;
+  accent: string;
+  quote: string; // segment-specific
+}
+
+// GeneratedPlan gains optional `coach?: PlanCoachBlock`.
+```
+
+The `/api/plan` route now attaches the coach block to its response via `generateDeterministicPlan`, so clients never need to re-derive coach context from answers.
+
+### New analytics events
+
+| Event | When | Properties |
+|---|---|---|
+| `age_selected` | Q4 submit | `age` |
+| `coach_selected` | Q8 submit | `coach`, `segment` |
+
+`funnel_started` now carries `utm_source`, `utm_campaign`, `utm_medium`, `utm_content`, `age_hint`, `segment_hint`, `lang_hint`, `persona`, `ui_locale`.
+
+### Telegram message shape
+
+- Q4 label: `*Q4 — How old are you? (age bracket)*` → bracket label (e.g. `25–34`).
+- Q8 label: `*Q8 — Pick your coach.*` → `Marcus — American, drills`.
+- Legacy `q4_prior_apps`, if present on a stale session, emitted as a compact debug footer below the main Q&A block.
+

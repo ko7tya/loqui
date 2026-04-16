@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Wordmark } from './Wordmark';
 import { useFunnelStore } from '@/lib/state';
 import { SEGMENT_DEFS } from '@/content/segments';
+import { COACHES, coachByStyle } from '@/content/coaches';
 import type { Segment } from '@/lib/types';
 
 export interface SuccessScreenProps {
@@ -43,6 +44,11 @@ export function SuccessScreen({ onRestart }: SuccessScreenProps) {
   const plan = answers.generated_plan;
   const position = answers.waitlist_position ?? waitlistBase;
   const copy = HEADLINES[segment];
+
+  // Resolve coach: prefer the explicit Q8 pick, fall back to the style mapping
+  // on older saved sessions, and give up silently if neither is present.
+  const coachId = answers.q8_coach ?? coachByStyle(answers.q8_style);
+  const coach = coachId ? COACHES[coachId] : undefined;
 
   useEffect(() => {
     // Fire on mount — parent already fired submit_succeeded.
@@ -117,6 +123,12 @@ export function SuccessScreen({ onRestart }: SuccessScreenProps) {
           You&apos;re <em className="italic">in</em>.
         </h1>
         <p className="text-body-lg text-ink-muted text-balance">{copy.body}</p>
+        {coach && (
+          <p className="text-body-sm text-ink-muted">
+            <span className="font-semibold text-ink">{coach.name}</span> is
+            ready. Check your inbox.
+          </p>
+        )}
       </motion.div>
 
       {/* Plan summary card */}

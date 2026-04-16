@@ -47,10 +47,14 @@ function show(title, obj) {
       q5_moment: "A negotiation where I don't lose the argument",
       q2_level: 'conversational',
       q1_who_talking_to: 'colleague',
+      // v2: age + coach ride along.
+      q4_age: '35_44',
+      q8_coach: 'marcus',
+      q8_style: 'drills',
     }),
   );
   const body = await res.json();
-  show('POST /api/plan — career/20', {
+  show('POST /api/plan — career/20 (v2)', {
     status: res.status,
     source: body.source,
     plan_name: body.plan.plan_name,
@@ -58,6 +62,7 @@ function show(title, obj) {
     week1_sessions: body.plan.weeks[0].sessions.length,
     the_moment: body.plan.the_moment,
     outcome: body.plan.outcome,
+    coach: body.plan.coach,
   });
 }
 
@@ -106,7 +111,8 @@ function show(title, obj) {
         q1_who_talking_to: 'colleague',
         q2_level: 'conversational',
         q3_segment: 'career',
-        q4_prior_apps: ['duolingo', 'babbel'],
+        // v2: age replaces prior-apps.
+        q4_age: '35_44',
         q5_moment: 'A negotiation where I don\'t lose the argument',
         q5_moment_id: 'negotiation',
         q6_time: 20,
@@ -115,13 +121,15 @@ function show(title, obj) {
           selected_option_id: 'opt_2',
           was_correct: true,
         },
+        // v2: coach + its style in lockstep.
+        q8_coach: 'elena',
         q8_style: 'conversations',
       },
       _hp: '',
     }),
   );
   const body = await res.json();
-  show('POST /api/submit — first', { status: res.status, body });
+  show('POST /api/submit — first (v2)', { status: res.status, body });
 }
 
 {

@@ -3,18 +3,24 @@ import type {
   QuestionDefinition,
   WhoTalkingTo,
   Level,
-  PriorApp,
+  AgeBracket,
   TimeCommitment,
-  LearningStyle,
 } from '@/lib/types';
+import { AGE_BRACKETS_CONTENT } from './age-brackets';
 
 /**
  * Question catalog.
  *
- * Day 1 deliverable: structural placeholders that mirror question-spec.md
- * §§Q1–Q10. Each question is typed by its answer so downstream renderers can
- * enforce correct shapes. Q5 is segment-aware (see `Q5_VARIANTS`).
+ * v2 shifts:
+ *   - Q4 now captures `AgeBracket` (see `age-brackets.ts`) instead of prior
+ *     app usage. The old multi-select is retired.
+ *   - Q8 is a coach picker (see `coaches.ts`). No `QuestionDefinition<>`
+ *     shape — coaches render with their own card UI.
+ *   - Dual copy: every top-of-funnel question has a `_SIMPLE_*` variant that
+ *     the `pickCopy` helper swaps in when Q2 level is `getting_by`.
  */
+
+// --- Q1: Vision opener ------------------------------------------------------
 
 export const Q1: QuestionDefinition<WhoTalkingTo> = {
   id: 'Q1_WHO_TALKING_TO',
@@ -41,6 +47,12 @@ export const Q1: QuestionDefinition<WhoTalkingTo> = {
   ],
 };
 
+/** Simple-English variant for Q1 (shown when Q2 level === 'getting_by'). */
+export const Q1_SIMPLE_HEADLINE =
+  'Who do you want to talk to in English?';
+
+// --- Q2: Current level ------------------------------------------------------
+
 export const Q2: QuestionDefinition<Level> = {
   id: 'Q2_CURRENT_LEVEL',
   section: 'profile',
@@ -63,8 +75,7 @@ export const Q2: QuestionDefinition<Level> = {
     {
       id: 'fluent_with_gaps',
       label: 'Fluent with gaps',
-      description:
-        'I work in English, but words slip away under pressure.',
+      description: 'I work in English, but words slip away under pressure.',
       value: 'fluent_with_gaps',
     },
     {
@@ -75,6 +86,23 @@ export const Q2: QuestionDefinition<Level> = {
     },
   ],
 };
+
+/**
+ * Short-sentence, common-verb descriptions used when the user has already
+ * picked `getting_by` — the shell swaps in these when available. The labels
+ * stay the same; only the helper descriptions simplify.
+ *
+ * (Q2 is shown BEFORE the level is known, but we still offer a simple set
+ * for pages that render Q2 after a restart.)
+ */
+export const Q2_SIMPLE_DESCRIPTIONS: Record<Level, string> = {
+  getting_by: 'I can order food. I can ask for the way.',
+  conversational: 'I can talk, but I get lost sometimes.',
+  fluent_with_gaps: 'I use English at work. Sometimes words are hard to find.',
+  near_native: 'I want to sound better. Small mistakes, big polish.',
+};
+
+// --- Q3: Segment detector ---------------------------------------------------
 
 export const Q3: QuestionDefinition<Segment> = {
   id: 'Q3_WHY_LEARNING',
@@ -105,42 +133,36 @@ export const Q3: QuestionDefinition<Segment> = {
     {
       id: 'travel_social',
       label: 'For life',
-      description:
-        "Travel, my partner's family, friends, social confidence.",
+      description: "Travel, my partner's family, friends, social confidence.",
       value: 'travel_social',
     },
   ],
 };
 
-export const Q4: QuestionDefinition<PriorApp> = {
-  id: 'Q4_PRIOR_APPS',
+// --- Q4 (v2): Age bracket ---------------------------------------------------
+
+export const Q4: QuestionDefinition<AgeBracket> = {
+  id: 'Q4_AGE',
   section: 'profile',
-  headline: 'Have you tried English apps before?',
-  sub_copy: 'No judgment — most of us have.',
-  input: 'multi',
-  options: [
-    { id: 'duolingo', label: 'Duolingo', value: 'duolingo' },
-    { id: 'babbel', label: 'Babbel', value: 'babbel' },
-    { id: 'busuu', label: 'Busuu', value: 'busuu' },
-    {
-      id: 'italki_preply',
-      label: 'A tutor on italki or Preply',
-      value: 'italki_preply',
-    },
-    { id: 'none', label: 'None of these', value: 'none' },
-  ],
+  headline: 'How old are you?',
+  sub_copy: 'We lean the plan on what people like you care about most.',
+  input: 'single',
+  options: AGE_BRACKETS_CONTENT.map((b) => ({
+    id: b.id,
+    label: b.label,
+    description: b.description,
+    value: b.id,
+  })),
 };
 
-/** Q5 is segment-aware: each segment has its own set of 4 moment options. */
+// --- Q5: Specific moment (segment-aware) -----------------------------------
+
 export const Q5_VARIANTS: Record<
   Segment,
   ReadonlyArray<{ id: string; label: string }>
 > = {
   career: [
-    {
-      id: 'standup',
-      label: 'A stand-up where I can think on my feet',
-    },
+    { id: 'standup', label: 'A stand-up where I can think on my feet' },
     {
       id: 'negotiation',
       label: "A negotiation where I don't lose the argument",
@@ -155,18 +177,12 @@ export const Q5_VARIANTS: Record<
     },
   ],
   test_prep: [
-    {
-      id: 'speaking',
-      label: 'The speaking section of IELTS / TOEFL',
-    },
+    { id: 'speaking', label: 'The speaking section of IELTS / TOEFL' },
     {
       id: 'writing',
       label: 'The writing section — clean, precise, on-brief',
     },
-    {
-      id: 'listening',
-      label: 'Listening to native speakers at full speed',
-    },
+    { id: 'listening', label: 'Listening to native speakers at full speed' },
     { id: 'band_score', label: 'The whole thing — I want the band score' },
   ],
   immigration: [
@@ -194,6 +210,11 @@ export const Q5_VARIANTS: Record<
     },
   ],
 };
+
+/** Simple-English variant for Q5 headline (shown when level === 'getting_by'). */
+export const Q5_SIMPLE_HEADLINE = 'Which moment do you want to be good at?';
+
+// --- Q6: Time commitment ----------------------------------------------------
 
 export const Q6: QuestionDefinition<TimeCommitment> = {
   id: 'Q6_TIME_COMMITMENT',
@@ -223,6 +244,10 @@ export const Q6: QuestionDefinition<TimeCommitment> = {
   ],
 };
 
+export const Q6_SIMPLE_HEADLINE = 'How many minutes a day?';
+
+// --- Q7: Phrase challenge (meta, renders its own UI) ------------------------
+
 export const Q7 = {
   id: 'Q7_PHRASE_CHALLENGE',
   section: 'moment' as const,
@@ -231,46 +256,31 @@ export const Q7 = {
   input: 'phrase_challenge' as const,
 };
 
-export const Q8: QuestionDefinition<LearningStyle> = {
-  id: 'Q8_LEARNING_STYLE',
-  section: 'moment',
-  headline: 'One more.',
-  // sub_copy is segment-aware; see SEGMENT_Q8_SUBCOPY
-  input: 'single',
-  options: [
-    {
-      id: 'drills',
-      label: 'Short, sharp drills',
-      description: '5-minute focus bursts.',
-      value: 'drills',
-    },
-    {
-      id: 'conversations',
-      label: 'Real conversations',
-      description: 'I want to speak, not study.',
-      value: 'conversations',
-    },
-    {
-      id: 'stories',
-      label: 'Stories and scenarios',
-      description: 'I learn by being somewhere.',
-      value: 'stories',
-    },
-    {
-      id: 'structured',
-      label: 'Structured lessons',
-      description: 'Give me a syllabus.',
-      value: 'structured',
-    },
-  ],
+export const Q7_SIMPLE_SUBCOPY = 'This is how a Loqui lesson works.';
+
+// --- Q8 (v2): Pick your coach ----------------------------------------------
+
+export const Q8 = {
+  id: 'Q8_COACH' as const,
+  section: 'moment' as const,
+  headline: 'Pick your coach.',
+  sub_copy: 'Four people. Four ways to teach you. One is for you.',
+  input: 'coach' as const,
 };
 
+/**
+ * Segment-aware framing line that sits above the coach grid. Rewritten for
+ * v2 to match the coach-selection mental model rather than the retired
+ * learning-style mental model.
+ */
 export const SEGMENT_Q8_SUBCOPY: Record<Segment, string> = {
-  career: 'How do you learn best under work pressure?',
-  test_prep: 'How should we drill this?',
-  immigration: "What's going to fit into a messy week?",
-  travel_social: 'What keeps it fun enough to stick with?',
+  career: 'Pick who keeps you honest under work pressure.',
+  test_prep: 'Pick who gets you to the band you came for.',
+  immigration: 'Pick who fits into a messy week.',
+  travel_social: 'Pick who makes this fun enough to stick with.',
 };
+
+// --- Q10: Email capture -----------------------------------------------------
 
 export const Q10 = {
   id: 'Q10_EMAIL' as const,
@@ -287,3 +297,16 @@ export const SEGMENT_Q10_SUBCOPY: Record<Segment, string> = {
   immigration: "Your plan, plus tomorrow's first step.",
   travel_social: 'Your plan, plus your first scenario.',
 };
+
+// --- Helper ----------------------------------------------------------------
+
+/**
+ * Pick between standard and simple copy. Simple copy is shown to users who
+ * answered Q2 with `getting_by` — shorter sentences, common verbs only.
+ *
+ * Usage:
+ *   const title = pickCopy(level, Q5.headline, Q5_SIMPLE_HEADLINE);
+ */
+export function pickCopy<T>(level: Level | undefined, standard: T, simple: T): T {
+  return level === 'getting_by' ? simple : standard;
+}

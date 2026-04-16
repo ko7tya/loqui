@@ -6,20 +6,23 @@ import { AnimatePresence } from 'framer-motion';
 
 import { useFunnelStore } from '@/lib/state';
 import { ThemeToggle } from '@/components/funnel/ThemeToggle';
+import { HelpTooltip } from '@/components/funnel/HelpTooltip';
 import { Wordmark } from '@/components/funnel/Wordmark';
 import { Q1WhoTalkingTo } from '@/components/funnel/screens/Q1WhoTalkingTo';
 import { Q2Level } from '@/components/funnel/screens/Q2Level';
 import { Q3Segment } from '@/components/funnel/screens/Q3Segment';
-import { Q4PriorApps } from '@/components/funnel/screens/Q4PriorApps';
+import { Q4Age } from '@/components/funnel/screens/Q4Age';
 import { Q5Moment } from '@/components/funnel/screens/Q5Moment';
 import { Q6TimeCommitment } from '@/components/funnel/screens/Q6TimeCommitment';
 import { Q7PhraseChallenge } from '@/components/funnel/screens/Q7PhraseChallenge';
-import { Q8LearningStyle } from '@/components/funnel/screens/Q8LearningStyle';
+import { Q8Coach } from '@/components/funnel/screens/Q8Coach';
 import { Q9PlanReveal } from '@/components/funnel/screens/Q9PlanReveal';
 import { Q10EmailCapture } from '@/components/funnel/screens/Q10EmailCapture';
 import { ReadinessScorePreview } from '@/components/funnel/interstitials/ReadinessScorePreview';
 import { SocialProofMap } from '@/components/funnel/interstitials/SocialProofMap';
 import { SuccessScreen } from '@/components/funnel/SuccessScreen';
+import { track } from '@/lib/analytics';
+import { readUtmFromLocation, detectBrowserLocale } from '@/lib/utm';
 
 /**
  * Funnel step catalog.
@@ -28,23 +31,20 @@ import { SuccessScreen } from '@/components/funnel/SuccessScreen';
  *   2  Q2 level
  *   2.5 Interstitial A — Readiness Score preview
  *   3  Q3 segment
- *   4  Q4 prior apps
+ *   4  Q4 age bracket          (v2 — replaced prior-apps)
  *   5  Q5 moment (segment-aware)
  *   5.5 Interstitial B — Social Proof map
  *   6  Q6 time
  *   7  Q7 phrase challenge
- *   8  Q8 learning style
- *   9  Q9 plan reveal
+ *   8  Q8 coach                (v2 — replaced learning-style)
+ *   9  Q9 plan reveal (with coach intro)
  *   10 Q10 email capture
  *   11 Success
  *
- * The interstitials live in between the integer steps. We pick a half-step
- * convention so the ProgressBar ("step X / 10") doesn't include them — they
- * reward, they don't progress.
+ * Interstitials live between the integer steps — the ProgressBar ("step X / 10")
+ * doesn't include them; they reward, they don't progress.
  */
 
-// Phases used inside the AnimatePresence. A stable string `key` per screen
-// plays nicely with mode="wait".
 type Phase =
   | 'Q1'
   | 'Q2'
@@ -60,7 +60,6 @@ type Phase =
   | 'Q10'
   | 'SUCCESS';
 
-// currentStep maps to a phase. Interstitials insert between integers.
 function phaseFor(step: number, interstitial: 'none' | 'IA' | 'IB'): Phase {
   if (interstitial === 'IA') return 'IA';
   if (interstitial === 'IB') return 'IB';
@@ -98,6 +97,9 @@ export default function FunnelPage() {
   const nextStep = useFunnelStore((s) => s.nextStep);
   const prevStep = useFunnelStore((s) => s.prevStep);
   const reset = useFunnelStore((s) => s.reset);
+  const setUtm = useFunnelStore((s) => s.setUtm);
+  const hydrateFromUtm = useFunnelStore((s) => s.hydrateFromUtm);
+  const setUiLocaleHint = useFunnelStore((s) => s.setUiLocaleHint);
 
   // Ephemeral UI state — interstitials live between integer steps.
   const [interstitial, setInterstitial] = useState<'none' | 'IA' | 'IB'>(
@@ -105,17 +107,40 @@ export default function FunnelPage() {
   );
   const [direction, setDirection] = useState<1 | -1>(1);
 
-  // Entry guard: if user lands on /funnel with currentStep 0, bump to 1.
+  // Entry guard: UTM + locale + step bump. Fires exactly once per mount.
   const bootedRef = useRef(false);
   useEffect(() => {
     if (bootedRef.current) return;
     bootedRef.current = true;
+
+    // v2: read UTM + locale hints, hydrate state, preseed answers.
+    const utm = readUtmFromLocation();
+    setUtm(utm);
+    hydrateFromUtm();
+
+    // Locale hint — lang_hint wins, otherwise navigator.language.
+    const localeFromUtm = utm.lang_hint;
+    const localeFromBrowser = detectBrowserLocale();
+    const locale = localeFromUtm ?? localeFromBrowser;
+    if (locale) setUiLocaleHint(locale);
+
+    track('funnel_started', {
+      ...utm,
+      ui_locale: locale,
+    });
+
     if (currentStep === 0) setStep(1);
     if (currentStep > 10) {
       // They already completed — show Success.
       setStep(11);
     }
-  }, [currentStep, setStep]);
+  }, [
+    currentStep,
+    setStep,
+    setUtm,
+    hydrateFromUtm,
+    setUiLocaleHint,
+  ]);
 
   // Keyboard: Escape = back
   useEffect(() => {
@@ -182,7 +207,10 @@ export default function FunnelPage() {
         >
           <Wordmark size={24} />
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <HelpTooltip />
+          <ThemeToggle />
+        </div>
       </nav>
 
       {/* Spacer to leave room for the floating header */}
@@ -221,7 +249,7 @@ export default function FunnelPage() {
             />
           )}
           {phase === 'Q4' && (
-            <Q4PriorApps
+            <Q4Age
               key="Q4"
               direction={direction}
               onNext={goForward}
@@ -261,7 +289,7 @@ export default function FunnelPage() {
             />
           )}
           {phase === 'Q8' && (
-            <Q8LearningStyle
+            <Q8Coach
               key="Q8"
               direction={direction}
               onNext={goForward}

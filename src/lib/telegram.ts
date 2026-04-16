@@ -1,5 +1,10 @@
-import type { FunnelState } from './types';
-import { LEVEL_LABELS, SEGMENT_LABELS } from './types';
+import type { FunnelState, CoachId, AgeBracket } from './types';
+import {
+  LEVEL_LABELS,
+  SEGMENT_LABELS,
+  AGE_BRACKET_LABELS,
+} from './types';
+import { COACHES } from '@/content/coaches';
 import type { SubmissionRecord } from './types-backend';
 
 /**
@@ -11,6 +16,10 @@ import type { SubmissionRecord } from './types-backend';
  * full record inline.
  *
  * MarkdownV2 is picky: every user-supplied value goes through `escapeMd`.
+ *
+ * v2: Q4 is now age, Q8 is now a coach pick. The old prior-app field is
+ * retained on the payload (for back-compat with stale sessions) and only
+ * rendered as a debug footer if present.
  */
 
 const API_BASE = 'https://api.telegram.org';
@@ -42,13 +51,6 @@ const TIME_LABELS: Record<NonNullable<FunnelState['q6_time']>, string> = {
   45: '45 min / day',
 };
 
-const STYLE_LABELS: Record<NonNullable<FunnelState['q8_style']>, string> = {
-  drills: 'Short, sharp drills',
-  conversations: 'Real conversations',
-  stories: 'Stories and scenarios',
-  structured: 'Structured lessons',
-};
-
 // --- Payload shape --------------------------------------------------------
 
 export interface TelegramNotifyPayload {
@@ -59,11 +61,16 @@ export interface TelegramNotifyPayload {
   q1_who?: FunnelState['q1_who_talking_to'];
   q2_level?: FunnelState['q2_level'];
   q3_segment?: FunnelState['q3_segment'];
+  /** v2: age bracket replaces the prior-app multi-select. */
+  q4_age?: AgeBracket;
+  /** Legacy — only rendered as a debug footer if present on the record. */
   q4_prior_apps?: FunnelState['q4_prior_apps'];
   q5_moment?: string;
   q5_moment_id?: string;
   q6_time?: FunnelState['q6_time'];
   q7_challenge?: FunnelState['q7_challenge'];
+  /** v2: selected coach; legacy `q8_style` is still tracked below. */
+  q8_coach?: CoachId;
   q8_style?: FunnelState['q8_style'];
   // Plan header.
   plan_name: string;
@@ -83,11 +90,13 @@ export const buildTelegramPayload = (
   q1_who: record.answers.q1_who_talking_to,
   q2_level: record.answers.q2_level,
   q3_segment: record.answers.q3_segment,
+  q4_age: record.answers.q4_age,
   q4_prior_apps: record.answers.q4_prior_apps,
   q5_moment: record.answers.q5_moment,
   q5_moment_id: record.answers.q5_moment_id,
   q6_time: record.answers.q6_time,
   q7_challenge: record.answers.q7_challenge,
+  q8_coach: record.answers.q8_coach,
   q8_style: record.answers.q8_style,
   plan_name: record.plan.plan_name,
   plan_tagline: record.plan.tagline,
@@ -111,14 +120,17 @@ const fmt = (value: string | number | undefined): string =>
  * alongside each answer so a reviewer can see exactly what was asked.
  */
 const QUESTIONS: Array<{ id: string; label: string }> = [
-  { id: 'Q1', label: 'When you imagine speaking fluently, who are you talking to?' },
+  {
+    id: 'Q1',
+    label: 'When you imagine speaking fluently, who are you talking to?',
+  },
   { id: 'Q2', label: 'Where are you right now? (current English level)' },
   { id: 'Q3', label: 'Why are you learning English?' },
-  { id: 'Q4', label: 'Have you tried English apps before?' },
+  { id: 'Q4', label: 'How old are you? (age bracket)' },
   { id: 'Q5', label: 'Which specific moment do you want to nail?' },
   { id: 'Q6', label: 'How much time can you actually give this?' },
   { id: 'Q7', label: 'Which phrasing sounds most natural? (live coaching demo)' },
-  { id: 'Q8', label: 'How do you learn best?' },
+  { id: 'Q8', label: 'Pick your coach.' },
   { id: 'Q9', label: 'Your generated plan' },
   { id: 'Q10', label: 'Email address' },
 ];
@@ -132,9 +144,7 @@ const answerFor = (p: TelegramNotifyPayload, index: number): string => {
     case 2:
       return p.q3_segment ? SEGMENT_LABELS[p.q3_segment] : '—';
     case 3:
-      return p.q4_prior_apps && p.q4_prior_apps.length > 0
-        ? p.q4_prior_apps.map((a) => PRIOR_APP_LABELS[a]).join(', ')
-        : 'None';
+      return p.q4_age ? AGE_BRACKET_LABELS[p.q4_age] : '—';
     case 4:
       return p.q5_moment ?? '—';
     case 5:
@@ -143,8 +153,11 @@ const answerFor = (p: TelegramNotifyPayload, index: number): string => {
       return p.q7_challenge
         ? `${p.q7_challenge.was_correct ? '✓ correct' : '✗ incorrect'} (challenge: ${p.q7_challenge.challenge_id}, picked ${p.q7_challenge.selected_option_id})`
         : '—';
-    case 7:
-      return p.q8_style ? STYLE_LABELS[p.q8_style] : '—';
+    case 7: {
+      if (!p.q8_coach) return '—';
+      const c = COACHES[p.q8_coach];
+      return `${c.name} — ${c.accent}, ${c.style}`;
+    }
     case 8:
       return `${p.plan_name} — ${p.plan_tagline}`;
     case 9:
@@ -166,6 +179,17 @@ export const formatMessage = (p: TelegramNotifyPayload): string => {
     lines.push(escapeMd(answerFor(p, i)));
     lines.push('');
   });
+
+  // Back-compat debug footer: only emit prior-apps if a legacy session
+  // still carries them. Keeps the main Q&A block clean.
+  if (p.q4_prior_apps && p.q4_prior_apps.length > 0) {
+    const joined = p.q4_prior_apps
+      .map((a) => PRIOR_APP_LABELS[a])
+      .join(', ');
+    lines.push(`*Legacy Q4 \\(prior apps\\)*`);
+    lines.push(escapeMd(joined));
+    lines.push('');
+  }
 
   lines.push('\\-\\-\\-');
   lines.push('Sent by Loqui');
@@ -189,6 +213,8 @@ export const sendMessage = async (
           email: payload.email,
           waitlist_position: payload.waitlist_position,
           segment: payload.q3_segment,
+          age: payload.q4_age,
+          coach: payload.q8_coach,
           plan_name: payload.plan_name,
         },
         null,

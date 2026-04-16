@@ -30,7 +30,8 @@ const record = {
     q1_who_talking_to: 'colleague',
     q2_level: 'conversational',
     q3_segment: 'career',
-    q4_prior_apps: ['duolingo', 'babbel'],
+    // v2: age bracket replaces the old prior-apps multi.
+    q4_age: '35_44',
     q5_moment: "A negotiation where I don't lose the argument",
     q5_moment_id: 'negotiation',
     q6_time: 20,
@@ -39,6 +40,9 @@ const record = {
       selected_option_id: 'opt_2',
       was_correct: true,
     },
+    // v2: coach selection; q8_style is still written alongside for the
+    // plan-template matrix.
+    q8_coach: 'elena',
     q8_style: 'conversations',
   },
   plan: {
