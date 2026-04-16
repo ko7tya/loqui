@@ -10,6 +10,12 @@ import tailwindcssAnimate from 'tailwindcss-animate';
  */
 const config: Config = {
   darkMode: 'class',
+  // Wrap every `hover:` utility in `@media (hover: hover)` so hover styles
+  // only apply to real pointer devices (mouse/trackpad). Fixes sticky-hover
+  // on iOS Safari + Android Chrome, where a tap-release would leave the
+  // previously-tapped card stuck in its hover state until another element
+  // got tapped — making unselected coach cards look selected.
+  future: { hoverOnlyWhenSupported: true },
   content: [
     './src/pages/**/*.{ts,tsx}',
     './src/components/**/*.{ts,tsx}',
