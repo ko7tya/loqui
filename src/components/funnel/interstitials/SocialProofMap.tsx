@@ -45,6 +45,28 @@ const PINS = [
   { name: 'Istanbul', x: 580, y: 195 },
 ];
 
+// Continent silhouettes as polygon point strings — rough but recognizable at
+// 1000×500. Each polygon gets filled with a dot pattern (see <defs>) so the
+// whole map reads as an "earth skeleton" made of dots.
+const CONTINENTS = [
+  // North America (including Greenland + Central America)
+  '90,95 160,80 240,85 290,110 310,175 290,220 255,255 225,260 205,285 185,300 150,285 130,240 105,210 85,170 78,130',
+  // South America
+  '270,280 320,285 345,340 340,395 310,430 280,435 260,400 255,350 260,310',
+  // Europe
+  '450,130 510,120 560,130 580,155 590,195 555,215 505,220 470,210 450,175',
+  // Africa
+  '495,220 560,215 605,250 600,320 580,370 540,400 510,400 485,370 475,320 480,260',
+  // Middle East + South Asia
+  '580,185 640,180 700,205 720,250 700,285 660,280 625,255 595,225',
+  // Asia (large landmass)
+  '590,105 680,95 780,105 860,130 870,180 835,220 770,240 720,225 670,215 625,195 600,160',
+  // South-East Asia / Indonesia
+  '755,270 810,275 840,295 810,315 770,310 755,290',
+  // Australia
+  '770,340 830,335 870,345 880,380 860,400 810,405 775,395',
+];
+
 const fmt = (n: number) => n.toLocaleString('en-US');
 
 export function SocialProofMap({
@@ -89,75 +111,112 @@ export function SocialProofMap({
           viewBox="0 0 1000 500"
           className="h-auto w-full text-ink"
           role="img"
-          aria-label="World map with learner pins"
+          aria-label="Earth skeleton made of dots, with learner activity pins"
         >
-          {/* Dotted-globe silhouette — a scatter of tiny dots inside an ellipse. */}
           <defs>
+            {/* Dot pattern — every continent polygon is filled with it, so the
+                world map reads as a skeleton of dots. 9×9 cell, single centered
+                dot, reuses the ink color at low opacity. */}
+            <pattern
+              id="spm-dot-grid"
+              x="0"
+              y="0"
+              width="9"
+              height="9"
+              patternUnits="userSpaceOnUse"
+            >
+              <circle cx="4.5" cy="4.5" r="1.1" fill="currentColor" opacity="0.38" />
+            </pattern>
+
             <radialGradient id="spm-glow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="hsl(var(--ember))" stopOpacity="0.55" />
               <stop offset="80%" stopColor="hsl(var(--ember))" stopOpacity="0" />
             </radialGradient>
           </defs>
 
-          {/* Faint dotted grid acting as a globe */}
-          <g fill="currentColor" fillOpacity="0.12">
-            {Array.from({ length: 40 }).map((_, row) =>
-              Array.from({ length: 80 }).map((_, col) => {
-                const cx = 20 + col * 12;
-                const cy = 30 + row * 11;
-                const nx = (cx - 500) / 480;
-                const ny = (cy - 250) / 240;
-                const inside = nx * nx + ny * ny < 1;
-                if (!inside) return null;
-                return (
-                  <circle
-                    key={`${row}-${col}`}
-                    cx={cx}
-                    cy={cy}
-                    r={1.1}
-                  />
-                );
-              }),
-            )}
+          {/* Continents */}
+          <g>
+            {CONTINENTS.map((points, i) => (
+              <polygon
+                key={i}
+                points={points}
+                fill="url(#spm-dot-grid)"
+              />
+            ))}
           </g>
 
-          {/* Pins */}
+          {/* Pins with radar-ping ripple + core blink */}
           {PINS.map((pin, i) => (
             <g key={pin.name}>
+              {/* Ambient glow */}
               <motion.circle
                 cx={pin.x}
                 cy={pin.y}
-                r={18}
+                r={22}
                 fill="url(#spm-glow)"
                 initial={{ opacity: 0 }}
                 animate={
                   reduce
-                    ? { opacity: 0.8 }
-                    : { opacity: [0.4, 0.9, 0.4] }
+                    ? { opacity: 0.7 }
+                    : { opacity: [0.25, 0.7, 0.25] }
                 }
                 transition={
                   reduce
                     ? { duration: 0 }
                     : {
-                        duration: 2.4,
+                        duration: 2,
                         repeat: Infinity,
-                        delay: i * 0.3,
+                        delay: i * 0.28,
                         ease: 'easeInOut',
                       }
                 }
               />
+              {/* Radar ripple — expands outward, fades */}
+              {!reduce && (
+                <motion.circle
+                  cx={pin.x}
+                  cy={pin.y}
+                  stroke="hsl(var(--ember))"
+                  strokeWidth={1.5}
+                  fill="none"
+                  initial={{ r: 4, opacity: 0.8 }}
+                  animate={{ r: [4, 26], opacity: [0.8, 0] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: i * 0.28,
+                    ease: 'easeOut',
+                  }}
+                />
+              )}
+              {/* Core dot — blinks in scale with the glow */}
               <motion.circle
                 cx={pin.x}
                 cy={pin.y}
-                r={4}
                 className="fill-ember"
-                initial={reduce ? { opacity: 1 } : { opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  duration: 0.4,
-                  delay: reduce ? 0 : 0.1 + i * 0.08,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
+                initial={{ r: reduce ? 4 : 3.5, opacity: reduce ? 1 : 0 }}
+                animate={
+                  reduce
+                    ? { r: 4, opacity: 1 }
+                    : { r: [3.5, 5, 3.5], opacity: 1 }
+                }
+                transition={
+                  reduce
+                    ? { duration: 0.4, delay: 0.1 + i * 0.05 }
+                    : {
+                        r: {
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.28,
+                          ease: 'easeInOut',
+                        },
+                        opacity: {
+                          duration: 0.35,
+                          delay: 0.1 + i * 0.06,
+                          ease: [0.16, 1, 0.3, 1],
+                        },
+                      }
+                }
               />
             </g>
           ))}

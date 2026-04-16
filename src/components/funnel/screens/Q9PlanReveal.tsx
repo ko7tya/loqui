@@ -309,12 +309,13 @@ function PlanReveal({
         </motion.p>
       )}
 
-      {/* Plan name + tagline */}
+      {/* Plan name — hero. Tagline intentionally omitted; the Q9 outer subtitle
+          already frames the plan, and repeating "Four weeks…" immediately
+          below the plan name read as duplication on mobile. */}
       <motion.header {...step(1)} className="flex flex-col gap-2">
         <h2 className="font-serif text-display text-ink text-balance">
           {plan.plan_name}
         </h2>
-        <p className="text-body-lg text-ink-muted">{plan.tagline}</p>
       </motion.header>
 
       {/* Moment quote */}
