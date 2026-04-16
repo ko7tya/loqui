@@ -11,6 +11,11 @@
  */
 @layer base {
   :root {
+    /* Tell the browser (especially iOS Safari) we support both modes so
+       native UI — form controls, scrollbars, the address bar — adapts to
+       whichever theme class is active on <html>. */
+    color-scheme: light;
+
     /* === Loqui palette (HSL triplets) === */
     --surface: 36 48% 93%;            /* #F5EEE2 warm cream */
     --surface-muted: 36 40% 88%;      /* #ECE3D3 card bg */
@@ -77,6 +82,8 @@
   }
 
   .dark {
+    color-scheme: dark;
+
     /* Dark mode per design-system.md §1.1 */
     --surface: 270 17% 9%;            /* #151019 */
     --surface-muted: 272 20% 12%;     /* #201724 */

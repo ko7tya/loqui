@@ -16,24 +16,39 @@ import { cn } from '@/lib/utils';
 
 type Theme = 'light' | 'dark';
 
+const applyTheme = (next: Theme) => {
+  const el = document.documentElement;
+  el.classList.toggle('dark', next === 'dark');
+  el.style.colorScheme = next;
+};
+
 export function ThemeToggle({ className }: { className?: string }) {
   const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
     const saved =
-      (typeof window !== 'undefined' &&
-        (localStorage.getItem('loqui-theme') as Theme | null)) ||
-      (window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light');
+      (localStorage.getItem('loqui-theme') as Theme | null) ||
+      (mql.matches ? 'dark' : 'light');
     setTheme(saved);
-    document.documentElement.classList.toggle('dark', saved === 'dark');
+    applyTheme(saved);
+
+    // If the user hasn't explicitly chosen, track system changes live (e.g.
+    // they flip iOS dark mode while the tab is open).
+    const onSystemChange = (e: MediaQueryListEvent) => {
+      if (localStorage.getItem('loqui-theme')) return; // explicit choice wins
+      const next: Theme = e.matches ? 'dark' : 'light';
+      setTheme(next);
+      applyTheme(next);
+    };
+    mql.addEventListener('change', onSystemChange);
+    return () => mql.removeEventListener('change', onSystemChange);
   }, []);
 
   const toggle = useCallback(() => {
     setTheme((prev) => {
       const next: Theme = prev === 'light' ? 'dark' : 'light';
-      document.documentElement.classList.toggle('dark', next === 'dark');
+      applyTheme(next);
       try {
         localStorage.setItem('loqui-theme', next);
       } catch {

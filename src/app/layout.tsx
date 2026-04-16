@@ -56,15 +56,19 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// Inline pre-hydration script: avoid light→dark flash for users who picked dark.
+// Inline pre-hydration script: avoid light→dark flash for users who picked
+// dark OR whose OS is set to dark. Also sets `style.colorScheme` so iOS
+// Safari renders native chrome (form controls, scrollbars) in the right mode
+// before CSS finishes loading.
 const themeBootScript = `
 (function() {
   try {
     var s = localStorage.getItem('loqui-theme');
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (s === 'dark' || (!s && prefersDark)) {
-      document.documentElement.classList.add('dark');
-    }
+    var isDark = s === 'dark' || (!s && prefersDark);
+    var el = document.documentElement;
+    if (isDark) el.classList.add('dark');
+    el.style.colorScheme = isDark ? 'dark' : 'light';
   } catch (e) {}
 })();
 `;
@@ -79,6 +83,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Declare both-mode support so iOS Safari's chrome + native inputs
+            adapt whether we've applied .dark yet or not. */}
+        <meta name="color-scheme" content="light dark" />
         <script
           dangerouslySetInnerHTML={{ __html: themeBootScript }}
           // This script must run before hydration to set the correct theme.
