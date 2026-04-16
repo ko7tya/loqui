@@ -213,8 +213,11 @@ export default function FunnelPage() {
         </div>
       </nav>
 
-      {/* Spacer to leave room for the floating header */}
-      <div className="pt-14">
+      {/* Swap viewport. Fixed min-height + overflow-hidden prevents vertical
+          jump when the outgoing screen unmounts ahead of the incoming one's
+          layout settling. Horizontal overflow is clipped so the x-translate
+          on the slide variants doesn't leak a scrollbar during the swap. */}
+      <div className="relative min-h-[100svh] overflow-x-hidden pt-14">
         <AnimatePresence mode="wait" custom={direction} initial={false}>
           {phase === 'Q1' && (
             <Q1WhoTalkingTo

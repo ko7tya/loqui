@@ -39,25 +39,26 @@ export interface QuestionShellProps {
 }
 
 const EASE_OUT_EXPO: number[] = [0.16, 1, 0.3, 1];
-const EASE_OUT_QUART: number[] = [0.25, 1, 0.35, 1];
 
+// Slide variants: translate + fade only. Dropped the `scale` component —
+// layering scale on both enter and exit created a visible wobble on the
+// final exit frame. Range kept short (18px) so the slide reads as a cut,
+// not a drawer. Entry is slightly slower than exit so the incoming screen
+// dominates attention.
 const slideVariants: Variants = {
   enter: (dir: number) => ({
-    x: dir * 32,
+    x: dir * 18,
     opacity: 0,
-    scale: 0.985,
   }),
   center: {
     x: 0,
     opacity: 1,
-    scale: 1,
-    transition: { duration: 0.32, ease: EASE_OUT_EXPO },
+    transition: { duration: 0.28, ease: EASE_OUT_EXPO },
   },
   exit: (dir: number) => ({
-    x: dir * -24,
+    x: dir * -18,
     opacity: 0,
-    scale: 0.99,
-    transition: { duration: 0.2, ease: EASE_OUT_QUART },
+    transition: { duration: 0.16, ease: EASE_OUT_EXPO },
   }),
 };
 
@@ -86,7 +87,10 @@ export function QuestionShell({
   return (
     <section
       className={cn(
-        'relative mx-auto flex min-h-[100svh] w-full max-w-[480px] flex-col px-5 pb-[calc(96px+env(safe-area-inset-bottom))] pt-4 sm:max-w-[520px] sm:px-6',
+        // No min-height here — the parent funnel container owns viewport
+        // height so both the exiting and entering shell stay the same size
+        // during AnimatePresence swap. This is what fixes the transition jump.
+        'relative mx-auto flex w-full max-w-[480px] flex-col px-5 pb-[calc(96px+env(safe-area-inset-bottom))] pt-4 sm:max-w-[520px] sm:px-6',
         className,
       )}
     >
