@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <rect width="180" height="180" rx="40" fill="#231A2E"/>
+  <text
+    x="46"
+    y="134"
+    font-family="'Source Serif 4', 'Source Serif Pro', 'Tiempos', serif"
+    font-weight="600"
+    font-size="124"
+    fill="#F5EEE2"
+    letter-spacing="-0.02em"
+  >L</text>
+  <circle cx="132" cy="50" r="20" fill="#D96B3C"/>
+</svg>

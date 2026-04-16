@@ -33,7 +33,9 @@ export const metadata: Metadata = {
   title: 'Loqui — Find your rhythm in English',
   description:
     'Loqui is an AI English tutor that builds you a four-week plan tuned to the moment you want to nail.',
-  metadataBase: new URL('https://loqui.local'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://skellartesttask.vercel.app',
+  ),
   openGraph: {
     title: 'Loqui — Find your rhythm in English',
     description:

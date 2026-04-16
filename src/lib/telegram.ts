@@ -105,48 +105,70 @@ const fmt = (value: string | number | undefined): string =>
 
 // --- Message formatter ----------------------------------------------------
 
+/**
+ * Every question is emitted as an explicit Q&A pair. The brief calls for
+ * "all Q&A pairs clearly labeled" — we render the literal question text
+ * alongside each answer so a reviewer can see exactly what was asked.
+ */
+const QUESTIONS: Array<{ id: string; label: string }> = [
+  { id: 'Q1', label: 'When you imagine speaking fluently, who are you talking to?' },
+  { id: 'Q2', label: 'Where are you right now? (current English level)' },
+  { id: 'Q3', label: 'Why are you learning English?' },
+  { id: 'Q4', label: 'Have you tried English apps before?' },
+  { id: 'Q5', label: 'Which specific moment do you want to nail?' },
+  { id: 'Q6', label: 'How much time can you actually give this?' },
+  { id: 'Q7', label: 'Which phrasing sounds most natural? (live coaching demo)' },
+  { id: 'Q8', label: 'How do you learn best?' },
+  { id: 'Q9', label: 'Your generated plan' },
+  { id: 'Q10', label: 'Email address' },
+];
+
+const answerFor = (p: TelegramNotifyPayload, index: number): string => {
+  switch (index) {
+    case 0:
+      return p.q1_who ? WHO_LABELS[p.q1_who] : '—';
+    case 1:
+      return p.q2_level ? LEVEL_LABELS[p.q2_level] : '—';
+    case 2:
+      return p.q3_segment ? SEGMENT_LABELS[p.q3_segment] : '—';
+    case 3:
+      return p.q4_prior_apps && p.q4_prior_apps.length > 0
+        ? p.q4_prior_apps.map((a) => PRIOR_APP_LABELS[a]).join(', ')
+        : 'None';
+    case 4:
+      return p.q5_moment ?? '—';
+    case 5:
+      return p.q6_time ? TIME_LABELS[p.q6_time] : '—';
+    case 6:
+      return p.q7_challenge
+        ? `${p.q7_challenge.was_correct ? '✓ correct' : '✗ incorrect'} (challenge: ${p.q7_challenge.challenge_id}, picked ${p.q7_challenge.selected_option_id})`
+        : '—';
+    case 7:
+      return p.q8_style ? STYLE_LABELS[p.q8_style] : '—';
+    case 8:
+      return `${p.plan_name} — ${p.plan_tagline}`;
+    case 9:
+      return p.email;
+    default:
+      return '—';
+  }
+};
+
 export const formatMessage = (p: TelegramNotifyPayload): string => {
-  const who = p.q1_who ? WHO_LABELS[p.q1_who] : '—';
-  const level = p.q2_level ? LEVEL_LABELS[p.q2_level] : '—';
-  const segment = p.q3_segment ? SEGMENT_LABELS[p.q3_segment] : '—';
-  const priorApps =
-    p.q4_prior_apps && p.q4_prior_apps.length > 0
-      ? p.q4_prior_apps.map((a) => PRIOR_APP_LABELS[a]).join(', ')
-      : 'None';
-  const time = p.q6_time ? TIME_LABELS[p.q6_time] : '—';
-  const style = p.q8_style ? STYLE_LABELS[p.q8_style] : '—';
-
-  const q7Line = p.q7_challenge
-    ? `Challenge: ${p.q7_challenge.was_correct ? '✓' : '✗'} — ${escapeMd(p.q7_challenge.challenge_id)}`
-    : 'Challenge: —';
-
   const lines: string[] = [
     `*New Loqui signup* — \\#${p.waitlist_position}`,
+    `Timestamp: ${fmt(p.timestamp)}`,
     '',
-    fmt(p.timestamp),
-    '',
-    '*Contact*',
-    `Email: ${escapeMd(p.email)}`,
-    '',
-    '*Profile*',
-    `Talking to: ${escapeMd(who)}`,
-    `Level: ${escapeMd(level)}`,
-    `Segment: ${escapeMd(segment)}`,
-    `Prior apps: ${escapeMd(priorApps)}`,
-    '',
-    '*Moment*',
-    `Target: ${fmt(p.q5_moment)}`,
-    `Time / day: ${escapeMd(time)}`,
-    q7Line,
-    `Style: ${escapeMd(style)}`,
-    '',
-    '*Plan*',
-    escapeMd(p.plan_name),
-    escapeMd(p.plan_tagline),
-    '',
-    '\\-\\-\\-',
-    'Sent by Loqui MVP',
   ];
+
+  QUESTIONS.forEach((q, i) => {
+    lines.push(`*${q.id} — ${escapeMd(q.label)}*`);
+    lines.push(escapeMd(answerFor(p, i)));
+    lines.push('');
+  });
+
+  lines.push('\\-\\-\\-');
+  lines.push('Sent by Loqui');
 
   return lines.join('\n');
 };
