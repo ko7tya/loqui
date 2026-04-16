@@ -20,7 +20,12 @@ export interface CoachAvatarProps {
   coach: CoachId;
   size?: number;
   className?: string;
-  /** Show a subtle pulsing ember dot — signals "AI, live". Default true. */
+  /**
+   * Kept for API back-compat with earlier call sites that passed
+   * `live={true}`. The live-indicator dot was removed per product
+   * feedback — the prop is now a no-op. Safe to delete when call sites
+   * stop using it.
+   */
   live?: boolean;
 }
 
@@ -28,12 +33,11 @@ export function CoachAvatar({
   coach,
   size = 56,
   className,
-  live = true,
 }: CoachAvatarProps) {
   const svg = COACH_AVATAR_SVG[coach];
   return (
     <div
-      className={cn('relative shrink-0', className)}
+      className={cn('shrink-0', className)}
       style={{ width: size, height: size }}
       aria-hidden
     >
@@ -45,16 +49,6 @@ export function CoachAvatar({
         // background rect. Source is trusted (static, build-time fetched).
         dangerouslySetInnerHTML={{ __html: svg }}
       />
-
-      {/* AI live indicator — static ember dot only (no pulse). */}
-      {live && (
-        <span
-          className="pointer-events-none absolute right-0 top-0 flex h-3 w-3 items-center justify-center"
-          aria-label="AI coach"
-        >
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ember ring-2 ring-surface" />
-        </span>
-      )}
     </div>
   );
 }

@@ -72,7 +72,15 @@ export function ProgressBar({ currentStep, className }: ProgressBarProps) {
                 transition={
                   reduce
                     ? { duration: 0 }
-                    : { type: 'spring', stiffness: 260, damping: 30 }
+                    : {
+                        // Tween with ease-out — smooth, monotonic, no
+                        // overshoot. Spring was causing a tiny settle
+                        // wobble at the end of the fill that read as
+                        // "jittery" on mid-range phones.
+                        type: 'tween',
+                        duration: 0.6,
+                        ease: [0.16, 1, 0.3, 1],
+                      }
                 }
               />
             </div>
