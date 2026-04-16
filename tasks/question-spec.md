@@ -570,7 +570,7 @@ The v1 spec above remains the source of truth for Q1-Q3, Q5-Q7, Q9-Q10. This sec
 
 **Q4 (was: prior app usage) is now age bracket.** Six options: Under 18, 18–24, 25–34, 35–44, 45–54, 55+. Single-choice, 2-column grid on `sm+`. Writes `q4_age: AgeBracket` to state.
 
-**Q8 (was: learning style) is now coach selection.** Four coaches — Marcus (American, drills), Elena (British, conversations), Aiko (Australian, stories), David (Canadian, structured). 2×2 grid on `sm+`, stacked on xs. The picker writes both `q8_coach: CoachId` (new) and `q8_style: LearningStyle` (legacy, still keyed by the plan-template matrix) in lockstep. The old prior-app field is retained on `FunnelState` for back-compat with stale saved sessions but never written by live code.
+**Q8 (was: learning style) is now coach selection.** Four AI coaches — Marcus (American, drills), Helen (British, conversations), Aiko (Australian, stories), David (Canadian, structured). Stacked single-column grid on all viewports so cards breathe and avatars sit clearly next to name + tagline. The picker writes both `q8_coach: CoachId` (new) and `q8_style: LearningStyle` (legacy, still keyed by the plan-template matrix) in lockstep. The old prior-app field is retained on `FunnelState` for back-compat with stale saved sessions but never written by live code.
 
 Funnel stays at 10 questions.
 
@@ -603,7 +603,7 @@ The SuccessScreen adds a single line below the segment body: "**{coach.name}** i
 export type AgeBracket =
   | 'under_18' | '18_24' | '25_34' | '35_44' | '45_54' | '55_plus';
 
-export type CoachId = 'marcus' | 'elena' | 'aiko' | 'david';
+export type CoachId = 'marcus' | 'helen' | 'aiko' | 'david';
 
 export interface Coach {
   id: CoachId;

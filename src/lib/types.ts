@@ -70,11 +70,11 @@ export const AGE_BRACKETS: readonly AgeBracket[] = [
   '55_plus',
 ] as const;
 
-export type CoachId = 'marcus' | 'elena' | 'aiko' | 'david';
+export type CoachId = 'marcus' | 'helen' | 'aiko' | 'david';
 
 export const COACH_IDS: readonly CoachId[] = [
   'marcus',
-  'elena',
+  'helen',
   'aiko',
   'david',
 ] as const;

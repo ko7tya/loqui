@@ -31,9 +31,9 @@ export const COACHES: Record<CoachId, Coach> = {
         'We skip the small talk. We build the lines that unlock real conversation.',
     },
   },
-  elena: {
-    id: 'elena',
-    name: 'Elena',
+  helen: {
+    id: 'helen',
+    name: 'Helen',
     accent: 'British',
     tagline: 'Warm. Patient. Loves a good chat.',
     vibe:
@@ -92,7 +92,7 @@ export const COACHES: Record<CoachId, Coach> = {
 
 export const COACHES_ORDER: readonly CoachId[] = [
   'marcus',
-  'elena',
+  'helen',
   'aiko',
   'david',
 ];

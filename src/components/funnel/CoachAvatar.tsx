@@ -9,7 +9,7 @@ import type { CoachId } from '@/lib/types';
  * their personality:
  *
  *   Marcus — cropped serif initial over sharp diagonal bars (direct, fast)
- *   Elena  — soft serif initial cradled by an arced wave (warm, flowing)
+ *   Helen  — soft serif initial cradled by an arced wave (warm, flowing)
  *   Aiko   — bold initial with rhythm-mark orbit (playful, scene-based)
  *   David  — centered serif initial over structured grid (methodical)
  *
@@ -34,7 +34,7 @@ const MARKS: Record<CoachId, AvatarMark> = {
     inkColor: 'hsl(36 48% 93%)',
     accent: 'hsl(19 65% 54%)',
   },
-  elena: {
+  helen: {
     initial: 'E',
     bgStart: 'hsl(22 65% 87%)',
     bgEnd: 'hsl(19 55% 75%)',
@@ -102,7 +102,7 @@ export function CoachAvatar({
         {/* Per-coach motif, clipped to the circle */}
         <g clipPath={`url(#${id}-clip)`}>
           {coach === 'marcus' && <MarcusMotif mark={mark} />}
-          {coach === 'elena' && <ElenaMotif mark={mark} />}
+          {coach === 'helen' && <HelenMotif mark={mark} />}
           {coach === 'aiko' && <AikoMotif mark={mark} />}
           {coach === 'david' && <DavidMotif mark={mark} />}
         </g>
@@ -162,7 +162,7 @@ function MarcusMotif({ mark }: { mark: AvatarMark }) {
   );
 }
 
-function ElenaMotif({ mark }: { mark: AvatarMark }) {
+function HelenMotif({ mark }: { mark: AvatarMark }) {
   // Soft wave arc — "warm, flowing conversations"
   return (
     <>

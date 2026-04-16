@@ -162,7 +162,7 @@ if (!planPost || !submitPost) {
           selected_option_id: 'opt_2',
           was_correct: true,
         },
-        q8_coach: 'elena',
+        q8_coach: 'helen',
         q8_style: 'conversations',
       },
       _hp: '',

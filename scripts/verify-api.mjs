@@ -122,7 +122,7 @@ function show(title, obj) {
           was_correct: true,
         },
         // v2: coach + its style in lockstep.
-        q8_coach: 'elena',
+        q8_coach: 'helen',
         q8_style: 'conversations',
       },
       _hp: '',

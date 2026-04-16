@@ -67,7 +67,7 @@ const AgeBracketSchema = z.enum([
   '45_54',
   '55_plus',
 ]);
-const CoachSchema = z.enum(['marcus', 'elena', 'aiko', 'david']);
+const CoachSchema = z.enum(['marcus', 'helen', 'aiko', 'david']);
 
 const PlanRequestSchema = z
   .object({

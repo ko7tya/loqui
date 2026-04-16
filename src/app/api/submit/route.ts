@@ -72,7 +72,7 @@ const FunnelStateSchema = z
     q8_style: z
       .enum(['drills', 'conversations', 'stories', 'structured'])
       .optional(),
-    q8_coach: z.enum(['marcus', 'elena', 'aiko', 'david']).optional(),
+    q8_coach: z.enum(['marcus', 'helen', 'aiko', 'david']).optional(),
   })
   .passthrough();
 

@@ -16,7 +16,7 @@ Four audience segments detected at Q3 drive everything downstream:
 
 | Segment | Q5 moment variants | Q9 plan name | Q9 coach quote |
 |---|---|---|---|
-| **Career** | Stand-up · negotiation · presentation · review | The Stand-Up Plan | Segment-specific for Marcus/Elena/Aiko/David |
+| **Career** | Stand-up · negotiation · presentation · review | The Stand-Up Plan | Segment-specific for Marcus/Helen/Aiko/David |
 | **Test-prep** | IELTS speaking · writing · listening · band score | The Band Score Plan | — |
 | **Immigration** | Visa interview · small talk · appointment · belonging | The Settled-In Plan | — |
 | **Travel / social** | Family dinner · conversation · party story · travel friction | The Host-Table Plan | — |
@@ -80,7 +80,7 @@ email_submitted · submit_succeeded · submit_failed
 ### We built for scale-ready monetization
 
 - Four named plans per segment open multiple pricing tiers (premium British coach = higher AOV)
-- Coach personas (Marcus / Elena / Aiko / David) set up voice-clone monetization down the line
+- Coach personas (Marcus / Helen / Aiko / David) set up voice-clone monetization down the line
 - Waitlist architecture with KV-persisted position counter — real, not faked
 - Segmentation makes per-campaign ROAS measurable from day 1
 

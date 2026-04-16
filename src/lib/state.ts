@@ -206,7 +206,7 @@ export const useFunnelStore = create<FunnelStore>()(
         }),
     }),
     {
-      name: 'loqui-funnel-v1',
+      name: 'loqui-funnel-v2',
       storage: createJSONStorage(() =>
         typeof window === 'undefined'
           ? // SSR no-op storage
@@ -217,7 +217,10 @@ export const useFunnelStore = create<FunnelStore>()(
             }
           : localStorage,
       ),
-      version: 1,
+      // v2: coach id `elena` renamed to `helen`. Bump the persist version +
+      // the storage key so any in-flight session with the old id gets reset
+      // rather than crashing the zod schema on submit.
+      version: 2,
       partialize: (state) => ({
         answers: state.answers,
         currentStep: state.currentStep,

@@ -42,7 +42,7 @@ const record = {
     },
     // v2: coach selection; q8_style is still written alongside for the
     // plan-template matrix.
-    q8_coach: 'elena',
+    q8_coach: 'helen',
     q8_style: 'conversations',
   },
   plan: {
