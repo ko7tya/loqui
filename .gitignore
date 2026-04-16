@@ -41,5 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local tooling
-.claude/
+# local tooling — ignore everything under .claude/ except shareable agents,
+# skills, commands, and the readme. settings.local.json stays local.
+.claude/*
+!.claude/agents/
+!.claude/skills/
+!.claude/commands/
+!.claude/README.md
