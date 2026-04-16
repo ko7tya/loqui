@@ -5,7 +5,7 @@ import { QuestionShell } from '../QuestionShell';
 import { OptionCard } from '../OptionCard';
 import { RadioGroupKeys } from '../RadioGroupKeys';
 import { Button } from '@/components/ui/button';
-import { Q6 } from '@/content/questions';
+import { Q6, Q6_SIMPLE_HEADLINE, pickCopy } from '@/content/questions';
 import { useFunnelStore } from '@/lib/state';
 import { track } from '@/lib/analytics';
 import type { TimeCommitment } from '@/lib/types';
@@ -18,6 +18,7 @@ export interface Q6Props {
 
 export function Q6TimeCommitment({ direction, onNext, onBack }: Q6Props) {
   const answer = useFunnelStore((s) => s.answers.q6_time);
+  const level = useFunnelStore((s) => s.answers.q2_level);
   const setQ6 = useFunnelStore((s) => s.setQ6);
 
   useEffect(() => {
@@ -29,12 +30,23 @@ export function Q6TimeCommitment({ direction, onNext, onBack }: Q6Props) {
     track('question_answered', { q: 'Q6', value });
   };
 
+  const title = pickCopy(
+    level,
+    'How much time can you actually give this?',
+    Q6_SIMPLE_HEADLINE,
+  );
+  const subtitle = pickCopy(
+    level,
+    Q6.sub_copy ?? '',
+    'Be honest. The plan only works if you show up.',
+  );
+
   return (
     <QuestionShell
       step={6}
       direction={direction}
-      title="How much time can you actually give this?"
-      subtitle={Q6.sub_copy}
+      title={title}
+      subtitle={subtitle}
       onBack={onBack}
       cta={
         <Button className="w-full" disabled={!answer} onClick={onNext}>

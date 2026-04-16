@@ -6,7 +6,7 @@ import { Check, X } from 'lucide-react';
 import { QuestionShell } from '../QuestionShell';
 import { RadioGroupKeys } from '../RadioGroupKeys';
 import { Button } from '@/components/ui/button';
-import { Q7 } from '@/content/questions';
+import { Q7, Q7_SIMPLE_SUBCOPY, pickCopy } from '@/content/questions';
 import { getSeedFor } from '@/content/phrase-challenges';
 import { useFunnelStore } from '@/lib/state';
 import { track } from '@/lib/analytics';
@@ -66,7 +66,7 @@ export function Q7PhraseChallenge({ direction, onNext, onBack }: Q7Props) {
       direction={direction}
       section="The moment"
       title={Q7.headline}
-      subtitle={Q7.sub_copy}
+      subtitle={pickCopy(level, Q7.sub_copy, Q7_SIMPLE_SUBCOPY)}
       onBack={onBack}
       cta={
         revealed ? (

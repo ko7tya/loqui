@@ -5,7 +5,11 @@ import { QuestionShell } from '../QuestionShell';
 import { OptionCard } from '../OptionCard';
 import { RadioGroupKeys } from '../RadioGroupKeys';
 import { Button } from '@/components/ui/button';
-import { Q5_VARIANTS } from '@/content/questions';
+import {
+  Q5_VARIANTS,
+  Q5_SIMPLE_HEADLINE,
+  pickCopy,
+} from '@/content/questions';
 import { useFunnelStore } from '@/lib/state';
 import { track } from '@/lib/analytics';
 
@@ -17,10 +21,28 @@ export interface Q5Props {
 
 export function Q5Moment({ direction, onNext, onBack }: Q5Props) {
   const segment = useFunnelStore((s) => s.answers.segment ?? 'career');
+  const level = useFunnelStore((s) => s.answers.q2_level);
   const answerId = useFunnelStore((s) => s.answers.q5_moment_id);
   const setQ5 = useFunnelStore((s) => s.setQ5);
 
   const variants = Q5_VARIANTS[segment];
+
+  // Beginner-level users get the simpler headline; others get the italic-stress version.
+  const title =
+    level === 'getting_by' ? (
+      Q5_SIMPLE_HEADLINE
+    ) : (
+      <>
+        What&apos;s the moment you want to <em className="italic">nail</em>?
+      </>
+    );
+  const subtitle = pickCopy(
+    level,
+    <>
+      The plan trains for <em className="italic">this</em>.
+    </>,
+    <>The plan is made for this.</>,
+  );
 
   useEffect(() => {
     track('question_viewed', {
@@ -38,12 +60,8 @@ export function Q5Moment({ direction, onNext, onBack }: Q5Props) {
     <QuestionShell
       step={5}
       direction={direction}
-      title={
-        <>
-          What&apos;s the moment you want to <em className="italic">nail</em>?
-        </>
-      }
-      subtitle={<>The plan trains for <em className="italic">this</em>.</>}
+      title={title}
+      subtitle={subtitle}
       onBack={onBack}
       cta={
         <Button className="w-full" disabled={!answerId} onClick={onNext}>
