@@ -17,6 +17,9 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "types": [
+      "vitest/globals"
+    ],
     "plugins": [
       {
         "name": "next"
@@ -33,9 +36,16 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "vitest.setup.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "playwright-report",
+    "test-results"
   ]
 }

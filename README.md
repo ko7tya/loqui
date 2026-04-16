@@ -109,3 +109,38 @@ See `tasks/question-spec.md` §"v2 — Coach + Age + UTM + Accessibility" for th
 - `npm run start` — serve production build
 - `npm run lint` — Next.js ESLint
 - `npm run typecheck` — `tsc --noEmit`
+- `npm run test` — Vitest unit + integration suite (one-shot)
+- `npm run test:watch` — Vitest in watch mode
+- `npm run test:e2e` — Playwright E2E against `npm run dev`
+- `npm run test:e2e:ui` — Playwright UI mode
+- `npm run test:all` — Vitest then Playwright
+
+## Testing
+
+The project ships three layers of tests:
+
+1. **Unit tests** live next to the source under `src/**/*.test.ts(x)`. They cover the pure libs (plan generator, UTM parser, Telegram formatter, analytics wrapper), the Zustand store, and two representative components (`ProgressBar`, `Q8Coach`).
+2. **Integration tests** in `tests/integration/` exercise the API route handlers (`/api/plan`, `/api/submit`, `/api/cron/retry-submissions`) by importing the route modules and calling them with a `Request`. No server spins up. KV and `fetch` are mocked so the tests are hermetic.
+3. **E2E tests** in `tests/e2e/*.e2e.ts` drive a real Chromium session (desktop + Pixel 5 mobile) against `npm run dev`. They cover the full Q1→Q10 career walkthrough, persist-on-refresh, and dark-mode system-preference reconciliation.
+
+### Running tests
+
+```bash
+npm install
+npm run test              # unit + integration
+npm run test -- src/lib/plan-generator.test.ts   # single file
+npm run test:watch        # watch mode
+
+npx playwright install    # one-time browser install
+npm run test:e2e          # full Playwright suite
+```
+
+### CI
+
+`.github/workflows/test.yml` runs on every push to `main` and every PR:
+
+- `unit` job: `npm ci` → `typecheck` → `build` → `test`
+- `e2e` job: installs Chromium then runs `test:e2e` against the dev server
+- Vitest coverage + Playwright HTML report are uploaded as artifacts on failure
+
+Do not merge a red build.
